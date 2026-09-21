@@ -1,0 +1,4 @@
+# Normalise line endings to LF in the repository and in the working tree.
+# Prettier is configured for LF and CI runs on Linux; without this, a Windows
+# clone checks out CRLF and every file trips the prettier/prettier rule.
+* text=auto eol=lf

@@ -1,0 +1,18 @@
+# Prettier already skips anything in .gitignore (node_modules, dist, .astro).
+# These are tracked but must not be reformatted:
+
+# Bootstrap-chain artifacts — PRD, tech-stack hand-off, verification logs.
+# These are contracts read by the 10x skills, not source code.
+context/
+
+# Managed by @przeprogramowani/10x-cli; the block between its BEGIN/END markers
+# is rewritten on sync, so reformatting it only creates drift.
+CLAUDE.md
+
+# Conflict-policy siblings kept verbatim for diffing against the starter.
+*.scaffold
+
+# Agent skill definitions, downloaded by @przeprogramowani/10x-cli and hash-tracked
+# in skills-lock.json. Reformatting them breaks the lock and shows up as local drift.
+.claude/
+.agents/
