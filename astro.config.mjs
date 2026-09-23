@@ -9,6 +9,8 @@ import cloudflare from "@astrojs/cloudflare";
 // https://astro.build/config
 export default defineConfig({
   output: "server",
+  // Supabase keeps its session in cookies; without this the adapter provisions a SESSION KV binding.
+  session: false,
   integrations: [react(), sitemap()],
   vite: {
     plugins: [tailwindcss()],
