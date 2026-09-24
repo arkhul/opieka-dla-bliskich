@@ -299,29 +299,29 @@ Warstwa aplikacji nad słownikami: typy DTO, formatowanie etykiety gminy, serwis
 
 #### Automated
 
-- [x] 2.1 Generator kończy się sukcesem i drukuje liczbę gmin oraz `STAN_NA`
-- [x] 2.2 `npx supabase db reset` aplikuje obie migracje
-- [x] 2.3 Liczba wierszy `gminas` równa liczbie z generatora
-- [x] 2.4 `search_gminas`: `lodz` zawiera `1061011`, `warszawa` zwraca `1465011` jako pierwszy
-- [x] 2.5 `search_gminas`: `lowicz` zwraca dwie pozycje różniące się `kind`
+- [x] 2.1 Generator kończy się sukcesem i drukuje liczbę gmin oraz `STAN_NA` — 60d6485
+- [x] 2.2 `npx supabase db reset` aplikuje obie migracje — 60d6485
+- [x] 2.3 Liczba wierszy `gminas` równa liczbie z generatora — 60d6485
+- [x] 2.4 `search_gminas`: `lodz` zawiera `1061011`, `warszawa` zwraca `1465011` jako pierwszy — 60d6485
+- [x] 2.5 `search_gminas`: `lowicz` zwraca dwie pozycje różniące się `kind` — 60d6485
 
 #### Manual
 
-- [x] 2.6 Wyrywkowo 3 znane gminy mają poprawny powiat, województwo i rodzaj
-- [x] 2.7 Nagłówek migracji wskazuje źródło i datę stanu danych
+- [x] 2.6 Wyrywkowo 3 znane gminy mają poprawny powiat, województwo i rodzaj — 60d6485
+- [x] 2.7 Nagłówek migracji wskazuje źródło i datę stanu danych — 60d6485
 
 ### Phase 3: Serwis, publiczne API i smoke
 
 #### Automated
 
-- [ ] 3.1 Lint przechodzi: `npm run lint`
-- [ ] 3.2 Typy przechodzą: `npx astro check`
-- [ ] 3.3 Build przechodzi: `npm run build`
-- [ ] 3.4 Smoke przechodzi lokalnie na preview z lokalnym Supabase
+- [x] 3.1 Lint przechodzi: `npm run lint`
+- [x] 3.2 Typy przechodzą: `npx astro check`
+- [x] 3.3 Build przechodzi: `npm run build`
+- [x] 3.4 Smoke przechodzi lokalnie na preview z lokalnym Supabase
 - [ ] 3.5 Job `smoke` w CI przechodzi na PR
 
 #### Manual
 
-- [ ] 3.6 Wyszukiwanie `brzez` zwraca czytelne, jednoznaczne etykiety
-- [ ] 3.7 Odpowiedzi endpointów nie zawierają pól spoza DTO
+- [x] 3.6 Wyszukiwanie `brzez` zwraca czytelne, jednoznaczne etykiety
+- [x] 3.7 Odpowiedzi endpointów nie zawierają pól spoza DTO
 - [ ] 3.8 Migracje wypchnięte na produkcję, produkcyjny endpoint usług zwraca 13 pozycji

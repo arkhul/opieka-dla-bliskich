@@ -112,7 +112,30 @@ npx supabase stop
 
 The local Studio UI is available at `http://localhost:54323`.
 
-No database tables or migrations are required — this project uses Supabase Auth's built-in `auth.users` table only.
+### Database migrations
+
+The schema and reference data (the service catalogue and all Polish gminas from TERYT) live in `supabase/migrations/`. Reference data is kept in migrations, not in `seed.sql`, because production only runs migrations.
+
+Apply all migrations to the local database from scratch:
+
+```bash
+npx supabase db reset
+```
+
+Push migrations to the production project (link once, then push after every new migration):
+
+```bash
+npx supabase link --project-ref <project-ref>
+npx supabase db push
+```
+
+To refresh gminas after administrative changes, download the latest TERC file (eteryt.stat.gov.pl → "Pobieranie plików" → TERC, wersja urzędowa, CSV) and generate a new migration from it; do not commit the raw CSV:
+
+```bash
+node scripts/generate-gminas-migration.mjs <TERC.csv> supabase/migrations/<YYYYMMDDHHmmss>_update_gminas.sql
+```
+
+The generator emits plain `insert` statements, so review the generated migration before pushing it: rows already present in `public.gminas` must be replaced rather than inserted twice.
 
 ### Using a cloud Supabase project instead
 
