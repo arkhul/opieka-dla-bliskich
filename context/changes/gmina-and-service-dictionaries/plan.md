@@ -285,30 +285,30 @@ Warstwa aplikacji nad słownikami: typy DTO, formatowanie etykiety gminy, serwis
 
 #### Automated
 
-- [x] 1.1 Migracja aplikuje się od zera: `npx supabase db reset`
-- [x] 1.2 Anon czyta 13 usług przez PostgREST, pierwszy `towarzystwo`
-- [x] 1.3 Anon nie może zapisać do `services` (błąd RLS)
-- [x] 1.4 Funkcja `search_gminas` dostępna dla anon, zwraca pustą tablicę
+- [x] 1.1 Migracja aplikuje się od zera: `npx supabase db reset` — c7fda9f
+- [x] 1.2 Anon czyta 13 usług przez PostgREST, pierwszy `towarzystwo` — c7fda9f
+- [x] 1.3 Anon nie może zapisać do `services` (błąd RLS) — c7fda9f
+- [x] 1.4 Funkcja `search_gminas` dostępna dla anon, zwraca pustą tablicę — c7fda9f
 
 #### Manual
 
-- [x] 1.5 Obie tabele mają RLS i po dwie polityki `SELECT`
-- [x] 1.6 Etykiety usług przeczytane i zaakceptowane
+- [x] 1.5 Obie tabele mają RLS i po dwie polityki `SELECT` — c7fda9f
+- [x] 1.6 Etykiety usług przeczytane i zaakceptowane — c7fda9f
 
 ### Phase 2: Import gmin z TERYT
 
 #### Automated
 
-- [ ] 2.1 Generator kończy się sukcesem i drukuje liczbę gmin oraz `STAN_NA`
-- [ ] 2.2 `npx supabase db reset` aplikuje obie migracje
-- [ ] 2.3 Liczba wierszy `gminas` równa liczbie z generatora
-- [ ] 2.4 `search_gminas`: `lodz` zawiera `1061011`, `warszawa` zwraca `1465011` jako pierwszy
-- [ ] 2.5 `search_gminas`: `lowicz` zwraca dwie pozycje różniące się `kind`
+- [x] 2.1 Generator kończy się sukcesem i drukuje liczbę gmin oraz `STAN_NA`
+- [x] 2.2 `npx supabase db reset` aplikuje obie migracje
+- [x] 2.3 Liczba wierszy `gminas` równa liczbie z generatora
+- [x] 2.4 `search_gminas`: `lodz` zawiera `1061011`, `warszawa` zwraca `1465011` jako pierwszy
+- [x] 2.5 `search_gminas`: `lowicz` zwraca dwie pozycje różniące się `kind`
 
 #### Manual
 
-- [ ] 2.6 Wyrywkowo 3 znane gminy mają poprawny powiat, województwo i rodzaj
-- [ ] 2.7 Nagłówek migracji wskazuje źródło i datę stanu danych
+- [x] 2.6 Wyrywkowo 3 znane gminy mają poprawny powiat, województwo i rodzaj
+- [x] 2.7 Nagłówek migracji wskazuje źródło i datę stanu danych
 
 ### Phase 3: Serwis, publiczne API i smoke
 
