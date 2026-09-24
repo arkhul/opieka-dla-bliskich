@@ -314,14 +314,14 @@ Warstwa aplikacji nad słownikami: typy DTO, formatowanie etykiety gminy, serwis
 
 #### Automated
 
-- [x] 3.1 Lint przechodzi: `npm run lint`
-- [x] 3.2 Typy przechodzą: `npx astro check`
-- [x] 3.3 Build przechodzi: `npm run build`
-- [x] 3.4 Smoke przechodzi lokalnie na preview z lokalnym Supabase
-- [ ] 3.5 Job `smoke` w CI przechodzi na PR
+- [x] 3.1 Lint przechodzi: `npm run lint` — 30447ec
+- [x] 3.2 Typy przechodzą: `npx astro check` — 30447ec
+- [x] 3.3 Build przechodzi: `npm run build` — 30447ec
+- [x] 3.4 Smoke przechodzi lokalnie na preview z lokalnym Supabase — 30447ec
+- [x] 3.5 Job `smoke` w CI przechodzi na PR — 30447ec
 
 #### Manual
 
-- [x] 3.6 Wyszukiwanie `brzez` zwraca czytelne, jednoznaczne etykiety
-- [x] 3.7 Odpowiedzi endpointów nie zawierają pól spoza DTO
-- [ ] 3.8 Migracje wypchnięte na produkcję, produkcyjny endpoint usług zwraca 13 pozycji
+- [x] 3.6 Wyszukiwanie `brzez` zwraca czytelne, jednoznaczne etykiety — 30447ec
+- [x] 3.7 Odpowiedzi endpointów nie zawierają pól spoza DTO — 30447ec
+- [x] 3.8 Migracje wypchnięte na produkcję, produkcyjny endpoint usług zwraca 13 pozycji — 30447ec
