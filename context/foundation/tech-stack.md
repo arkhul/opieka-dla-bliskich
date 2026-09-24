@@ -5,7 +5,7 @@ project_name: opieka-dla-bliskich
 hints:
   language_family: js
   team_size: solo
-  deployment_target: cloudflare-pages
+  deployment_target: cloudflare-workers
   ci_provider: github-actions
   ci_default_flow: auto-deploy-on-merge
   bootstrapper_confidence: first-class
@@ -32,5 +32,5 @@ dostępności po stronie Postgresa, a RLS jest właściwym miejscem na regułę,
 widzi wyłącznie osoba zalogowana. Płatności, realtime i AI są poza zakresem zgodnie z
 Non-Goals PRD. Powiadomienia o nowym profilu (FR-015) zostały oznaczone jako nice-to-have i
 nie są tu uwzględnione — runtime brzegowy Cloudflare ogranicza długo działające zadania, więc
-przy ich wdrażaniu potrzebny będzie osobny worker lub kolejka. Wdrożenie na Cloudflare Pages,
+przy ich wdrażaniu potrzebny będzie osobny worker lub kolejka. Wdrożenie na Cloudflare Workers,
 CI na GitHub Actions z automatycznym wdrożeniem po scaleniu.
