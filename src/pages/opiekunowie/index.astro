@@ -67,7 +67,10 @@ if (!supabase) {
         })),
       );
     }
-  } catch {
+  } catch (error) {
+    // Server-side only: the visitor gets the generic message, the cause stays in the Worker logs.
+    // eslint-disable-next-line no-console
+    console.error("Caregiver list failed to load", error);
     pageError = "Nie udało się wczytać listy opiekunów. Odśwież stronę za chwilę.";
   }
 }
@@ -219,7 +222,7 @@ const buttonClass =
                   return (
                     <li>
                       <article class="min-w-0 space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
-                        <h2 class="text-lg font-semibold break-words">{caregiver.displayName}</h2>
+                        <h3 class="text-lg font-semibold break-words">{caregiver.displayName}</h3>
                         {caregiver.description && (
                           <p class="line-clamp-3 break-words text-blue-50">{caregiver.description}</p>
                         )}

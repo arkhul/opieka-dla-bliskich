@@ -175,12 +175,15 @@ export default function CaregiverProfileForm({ initialProfile, services, account
           rows={4}
           placeholder="Doświadczenie, kwalifikacje, w jakich godzinach możesz pomagać"
           aria-invalid={errors.description ? true : undefined}
-          aria-describedby={errors.description ? "description-error" : undefined}
+          aria-describedby={errors.description ? "description-hint description-error" : "description-hint"}
           className={cn(inputClass, errors.description && invalidInputClass)}
         />
-        <p className="mt-1 text-right text-xs text-blue-100/50">
-          {description.length} / {DESCRIPTION_MAX}
-        </p>
+        <div className="mt-1 flex items-start justify-between gap-3 text-xs text-blue-100/50">
+          <p id="description-hint">Opis jest widoczny publicznie — nie wpisuj tu telefonu ani e-maila.</p>
+          <p className="shrink-0">
+            {description.length} / {DESCRIPTION_MAX}
+          </p>
+        </div>
         <FieldError id="description-error" message={errors.description} />
       </div>
 
