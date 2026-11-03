@@ -150,6 +150,17 @@ select teryt, name, replaced_by from public.gminas where not active order by ter
 
 For gminas merged or abolished without an automatic successor, write a separate migration by hand that sets `replaced_by`. Do not edit the generated file.
 
+The migration also re-points caregiver profiles: every link in `public.caregiver_gminas` to a retired gmina moves to its `replaced_by` when that successor is active (a caregiver who already has the successor keeps a single link). Links to a retired gmina without an active successor are left unchanged, so the gmina still shows in the caregiver's profile as retired; the notice `gminas sync: re-pointed N caregiver gmina links …; M links left on retired gminas without an active successor: <codes>` lists those codes. Resolve them by setting `replaced_by` in a hand-written migration (the next generated migration re-points them) or leave them for the caregivers to replace in their profile. Since `npx supabase db push` may not show notices, find the links left behind with:
+
+```sql
+select cg.teryt, g.name, g.replaced_by, count(*) as caregivers
+from public.caregiver_gminas as cg
+join public.gminas as g on g.teryt = cg.teryt
+where not g.active
+group by cg.teryt, g.name, g.replaced_by
+order by cg.teryt;
+```
+
 ### Using a cloud Supabase project instead
 
 If you prefer to use a hosted Supabase project, add these variables to your `.env` and `.dev.vars` files:

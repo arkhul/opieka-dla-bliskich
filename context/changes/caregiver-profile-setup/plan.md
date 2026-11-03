@@ -481,25 +481,25 @@ Odczyt własnego profilu to jedno zapytanie z osadzeniami plus jedno RPC; zapis 
 
 #### Automated
 
-- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset`
-- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error`
-- [x] 1.3 Każda nowa tabela ma włączony RLS (5 wystąpień `enable row level security`)
+- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset` — 0ad6859
+- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error` — 0ad6859
+- [x] 1.3 Każda nowa tabela ma włączony RLS (5 wystąpień `enable row level security`) — 0ad6859
 
 #### Manual
 
-- [x] 1.4 `pg_policies` pokazuje dokładnie polityki z tabeli „Model danych” (brak `anon` na `caregiver_contacts` i `accounts`)
-- [x] 1.5 `caregiver_profile_missing(gen_random_uuid())` zwraca wszystkie cztery braki
+- [x] 1.4 `pg_policies` pokazuje dokładnie polityki z tabeli „Model danych” (brak `anon` na `caregiver_contacts` i `accounts`) — 0ad6859
+- [x] 1.5 `caregiver_profile_missing(gen_random_uuid())` zwraca wszystkie cztery braki — 0ad6859
 
 ### Phase 2: Przepinanie profili w generatorze gmin
 
 #### Automated
 
-- [ ] 2.1 Skrypt parsuje się: `node --check scripts/generate-gminas-migration.mjs`
-- [ ] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.1 Skrypt parsuje się: `node --check scripts/generate-gminas-migration.mjs`
+- [x] 2.2 Lint przechodzi: `npm run lint`
 
 #### Manual
 
-- [ ] 2.3 Scenariusz RODZ 1→3 dla Warszawy przepina opiekuna na `1465013`, także gdy ma już następcę
+- [x] 2.3 Scenariusz RODZ 1→3 dla Warszawy przepina opiekuna na `1465013`, także gdy ma już następcę
 
 ### Phase 3: Role w rejestracji i logowaniu
 
