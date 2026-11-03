@@ -350,13 +350,13 @@ Migracja tylko zmienia politykę i dodaje funkcję — bez zmian danych. Wycofan
 
 #### Automated
 
-- [x] 3.1 Lint przechodzi: `npm run lint`
-- [x] 3.2 Typy przechodzą: `npx astro check`
-- [x] 3.3 Build przechodzi: `npm run build`
-- [x] 3.4 Smoke przechodzi z krokami stron i pełnego przepływu: `npm run smoke`
+- [x] 3.1 Lint przechodzi: `npm run lint` — c5fb018
+- [x] 3.2 Typy przechodzą: `npx astro check` — c5fb018
+- [x] 3.3 Build przechodzi: `npm run build` — c5fb018
+- [x] 3.4 Smoke przechodzi z krokami stron i pełnego przepływu: `npm run smoke` — c5fb018
 
 #### Manual
 
-- [x] 3.5 Na ekranie 375 px anonim przechodzi: lista → karta → profil → „Pokaż dane kontaktowe” → „Załóż konto” (rola koordynatora zaznaczona) → rejestracja → `/kontakt/<id>` z klikalnym numerem i e-mailem
-- [x] 3.6 W źródle strony `/opiekunowie/<id>` oglądanej jako anonim nie ma telefonu ani e-maila opiekuna, a odpowiedzi obu stron mają `X-Robots-Tag: noindex` i `Cache-Control: private, no-store`
-- [x] 3.7 Zalogowany opiekun na `/kontakt/<id>` innego opiekuna widzi profil bez kontaktu i komunikat dla kont koordynatorów
+- [x] 3.5 Na ekranie 375 px anonim przechodzi: lista → karta → profil → „Pokaż dane kontaktowe” → „Załóż konto” (rola koordynatora zaznaczona) → rejestracja → `/kontakt/<id>` z klikalnym numerem i e-mailem — c5fb018
+- [x] 3.6 W źródle strony `/opiekunowie/<id>` oglądanej jako anonim nie ma telefonu ani e-maila opiekuna, a odpowiedzi obu stron mają `X-Robots-Tag: noindex` i `Cache-Control: private, no-store` — c5fb018
+- [x] 3.7 Zalogowany opiekun na `/kontakt/<id>` innego opiekuna widzi profil bez kontaktu i komunikat dla kont koordynatorów — c5fb018
