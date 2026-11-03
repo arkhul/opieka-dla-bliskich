@@ -1,10 +1,10 @@
 ---
 change_id: contact-reveal-after-signin
 title: Contact reveal after sign-in
-status: impl_reviewed
+status: archived
 created: 2026-11-03
 updated: 2026-11-03
-archived_at: null
+archived_at: 2026-11-03T21:36:47Z
 ---
 
 ## Notes

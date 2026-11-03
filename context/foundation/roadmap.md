@@ -44,7 +44,7 @@ Rodzinny koordynator opieki — np. córka organizująca stałą opiekę dla mat
 | F-01 | gmina-and-service-dictionaries | (foundation) słownik gmin i zamknięty katalog usług są dostępne w aplikacji            | —             | FR-005, FR-006, FR-009, FR-010            | done |
 | S-01 | caregiver-profile-setup        | opiekun zakłada konto i publikuje profil z kontaktem, gminami i usługami               | F-01          | FR-001, FR-003, FR-004, FR-005, FR-006    | done |
 | S-02 | public-caregiver-search        | każdy bez logowania przegląda listę opiekunów i filtruje ją po gminie i usłudze        | F-01, S-01    | US-01, FR-008, FR-009, FR-010             | done        |
-| S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | in-progress |
+| S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | done        |
 | S-04 | caregiver-availability-filter  | opiekun ustawia dostępność (dni tygodnia × pory dnia), a koordynator po niej filtruje  | S-01, S-02    | FR-007, FR-011                            | proposed |
 | S-05 | ranked-match-results           | koordynator widzi wyniki uszeregowane według dopasowania, z oznaczeniem braków         | S-02, S-04    | US-01, FR-016                             | proposed |
 | S-06 | caregiver-profile-deletion     | opiekun trwale usuwa swój profil i znika on ze wszystkich wyników                      | S-01, S-02    | FR-003                                    | proposed |
@@ -128,7 +128,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Czy rejestracja wymaga potwierdzenia e-maila (PRD Open Question 1)? Wpływa na to, czy kontakt odsłania się od razu po rejestracji. — Owner: user. Block: no.
 - **Risk:** To north star — zamyka główne kryterium sukcesu; dane kontaktowe mogą trafić wyłącznie na trasę chronioną, a publiczny host `*.workers.dev` nie może ich wystawić wyszukiwarkom.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-04: Dostępność opiekuna i filtr po dostępności
 
@@ -212,3 +212,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 - **F-01: (foundation) słownik gmin i zamknięty katalog rodzajów usług są dostępne w aplikacji jako wspólne listy wyboru — tylko dane referencyjne, bez tabel profili.** — Archived 2026-11-03 → `context/archive/2026-09-24-gmina-and-service-dictionaries/`. Lesson: —.
 - **S-01: opiekun zakłada konto, loguje się, uzupełnia dane kontaktowe, obsługiwane gminy i oferowane usługi, a następnie widzi swój profil.** — Archived 2026-11-03 → `context/archive/2026-11-03-caregiver-profile-setup/`. Lesson: —.
 - **S-02: każdy — także bez logowania — przegląda listę opiekunów i zawęża ją po gminie i rodzaju usługi; widzi profile bez danych kontaktowych.** — Archived 2026-11-03 → `context/archive/2026-11-03-public-caregiver-search/`. Lesson: —.
+- **S-03: koordynator z listy przechodzi do profilu, zakłada konto lub loguje się i widzi dane kontaktowe opiekuna.** — Archived 2026-11-03 → `context/archive/2026-11-03-contact-reveal-after-signin/`. Lesson: —.
