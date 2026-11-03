@@ -283,30 +283,30 @@ Migracja schematu jest addytywna (nowe kolumny z wartością domyślną, `create
 
 #### Automated
 
-- [x] 2.1 `npm run lint` przechodzi
-- [x] 2.2 Generator bez argumentów kończy się kodem 1 i komunikatem użycia
-- [x] 2.3 Generator z nazwą pliku bez znacznika czasu kończy się kodem 1
-- [x] 2.4 Generator z `--max-retired abc` kończy się kodem 1
-- [x] 2.5 CI job `smoke` przechodzi
+- [x] 2.1 `npm run lint` przechodzi — 9d2bc3a
+- [x] 2.2 Generator bez argumentów kończy się kodem 1 i komunikatem użycia — 9d2bc3a
+- [x] 2.3 Generator z nazwą pliku bez znacznika czasu kończy się kodem 1 — 9d2bc3a
+- [x] 2.4 Generator z `--max-retired abc` kończy się kodem 1 — 9d2bc3a
+- [x] 2.5 CI job `smoke` przechodzi — 9d2bc3a
 
 #### Manual
 
-- [x] 2.6 Scenariusz 1 (no-op) — migracja stosuje się na zapełnionej bazie, nic nie wycofane
-- [x] 2.7 Scenariusz 2 (zmiana RODZ) — `0201022` wycofana z następcą `0201023`, wyszukiwarka pokazuje tylko nową
-- [x] 2.8 Scenariusz 3 (próg) — migracja przerwana, tabela bez zmian, nieudana migracja usunięta
-- [x] 2.9 Scenariusz 4 (reaktywacja) — `0201022` znów aktywna, `0201023` wycofana z następcą `0201022`
-- [x] 2.10 Scenariusz 5 (starszy plik) — generator odmawia przy wcześniejszym `STAN_NA`
-- [x] 2.11 Nagłówek pokazuje nazwę migracji i tryb; testowe pliki usunięte, `db reset` przechodzi
+- [x] 2.6 Scenariusz 1 (no-op) — migracja stosuje się na zapełnionej bazie, nic nie wycofane — 9d2bc3a
+- [x] 2.7 Scenariusz 2 (zmiana RODZ) — `0201022` wycofana z następcą `0201023`, wyszukiwarka pokazuje tylko nową — 9d2bc3a
+- [x] 2.8 Scenariusz 3 (próg) — migracja przerwana, tabela bez zmian, nieudana migracja usunięta — 9d2bc3a
+- [x] 2.9 Scenariusz 4 (reaktywacja) — `0201022` znów aktywna, `0201023` wycofana z następcą `0201022` — 9d2bc3a
+- [x] 2.10 Scenariusz 5 (starszy plik) — generator odmawia przy wcześniejszym `STAN_NA` — 9d2bc3a
+- [x] 2.11 Nagłówek pokazuje nazwę migracji i tryb; testowe pliki usunięte, `db reset` przechodzi — 9d2bc3a
 
 ### Phase 3: Dokumentacja i przekazanie do S-01
 
 #### Automated
 
-- [ ] 3.1 `npx prettier --check README.md` przechodzi
-- [ ] 3.2 `grep` znajduje `on delete restrict` w roadmapie
-- [ ] 3.3 `README.md` nie zawiera już frazy o „plain insert statements”
+- [x] 3.1 `npx prettier --check README.md` przechodzi
+- [x] 3.2 `grep` znajduje `on delete restrict` w roadmapie
+- [x] 3.3 `README.md` nie zawiera już frazy o „plain insert statements”
 
 #### Manual
 
-- [ ] 3.4 Procedura z README daje migrację, która się stosuje
-- [ ] 3.5 Wpis S-01 w roadmapie zawiera FK `on delete restrict`, filtrowanie aktywnych gmin i przepinanie przez `replaced_by`
+- [x] 3.4 Procedura z README daje migrację, która się stosuje
+- [x] 3.5 Wpis S-01 w roadmapie zawiera FK `on delete restrict`, filtrowanie aktywnych gmin i przepinanie przez `replaced_by`

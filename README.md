@@ -135,7 +135,20 @@ To refresh gminas after administrative changes, download the latest TERC file (e
 node scripts/generate-gminas-migration.mjs <TERC.csv> supabase/migrations/<YYYYMMDDHHmmss>_update_gminas.sql
 ```
 
-The generator emits plain `insert` statements, so review the generated migration before pushing it: rows already present in `public.gminas` must be replaced rather than inserted twice.
+The generated migration syncs `public.gminas` with the file and works on a populated table:
+
+- It updates existing gminas, adds new ones and marks gminas missing from TERC as retired (`active = false`). Rows are never deleted. Retired gminas disappear from the gmina search.
+- When only the gmina type changes (same WOJ+POW+GMI, different RODZ, e.g. a village gets town rights), the new code is set as the successor in `replaced_by` automatically.
+- The generator refuses a TERC file whose `STAN_NA` is older than the one in the existing gmina migrations, so an outdated file cannot undo later changes.
+- The migration aborts without changes if it would retire more than 30 gminas without a successor (type changes do not count). For a real large reform, regenerate it with `--max-retired N`.
+
+After applying it, check the retired gminas:
+
+```sql
+select teryt, name, replaced_by from public.gminas where not active order by teryt;
+```
+
+For gminas merged or abolished without an automatic successor, write a separate migration by hand that sets `replaced_by`. Do not edit the generated file.
 
 ### Using a cloud Supabase project instead
 

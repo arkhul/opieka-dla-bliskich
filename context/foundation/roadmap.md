@@ -101,6 +101,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Czy rejestracja wymaga potwierdzenia e-maila (PRD Open Question 1)? Planowanie może ruszyć na obecnej konfiguracji bez potwierdzenia. — Owner: user. Block: no.
 - **Risk:** Tu po raz pierwszy zapisujemy dane kontaktowe, więc już w tym wycinku muszą być oddzielone od publicznej części profilu regułami dostępu w bazie — dokładanie tego później oznacza migrację danych, które już wyciekały do publicznych zapytań.
+- **Constraints:** (z gminas-generator-upsert) FK z profili do `public.gminas(teryt)` z `on delete restrict`; w formularzu i walidacji wybór tylko gmin `active`; generator gmin musi dostać krok przepinający profile z kodu wycofanego na `replaced_by` wyłącznie na **aktywnego** następcę (np. `update … set teryt = n.teryt from public.gminas g join public.gminas n on n.teryt = g.replaced_by and n.active where … and not g.active`), bo `replaced_by` może wskazywać gminę później wycofaną bez następcy; profile wskazujące wycofaną gminę bez aktywnego następcy pozostają do ręcznego rozstrzygnięcia.
 - **Status:** proposed
 
 ### S-02: Publiczna lista opiekunów z filtrami gminy i usługi
