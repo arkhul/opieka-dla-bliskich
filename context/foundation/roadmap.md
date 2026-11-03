@@ -41,7 +41,7 @@ Rodzinny koordynator opieki — np. córka organizująca stałą opiekę dla mat
 
 | ID   | Change ID                      | Outcome (user can …)                                                                  | Prerequisites | PRD refs                                  | Status   |
 | ---- | ------------------------------ | ------------------------------------------------------------------------------------- | ------------- | ----------------------------------------- | -------- |
-| F-01 | gmina-and-service-dictionaries | (foundation) słownik gmin i zamknięty katalog usług są dostępne w aplikacji            | —             | FR-005, FR-006, FR-009, FR-010            | done |
+| F-01 | gmina-and-service-dictionaries | (foundation) słownik gmin i zamknięty katalog usług są dostępne w aplikacji            | —             | FR-005, FR-006, FR-009, FR-010            | in-progress |
 | S-01 | caregiver-profile-setup        | opiekun zakłada konto i publikuje profil z kontaktem, gminami i usługami               | F-01          | FR-001, FR-003, FR-004, FR-005, FR-006    | proposed |
 | S-02 | public-caregiver-search        | każdy bez logowania przegląda listę opiekunów i filtruje ją po gminie i usłudze        | F-01, S-01    | US-01, FR-008, FR-009, FR-010             | proposed |
 | S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | proposed |
@@ -86,7 +86,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Zakres słownika gmin — cała Polska czy region startowy? — Owner: user. Block: no.
   - Treść zamkniętego katalogu usług (PRD utrzymał zamknięty słownik, ale nie wymienia pozycji) — `/10x-plan` przygotuje projekt listy do akceptacji. — Owner: user. Block: no.
 - **Risk:** Wydzielone, bo obie strony rynku muszą mówić tymi samymi wartościami — rozjazd słowników między profilem a filtrem po cichu zeruje wyniki; zakres ograniczony do danych referencyjnych, żeby nie budować z wyprzedzeniem warstwy danych.
-- **Status:** done
+- **Status:** in-progress
 
 ## Slices
 
@@ -207,5 +207,3 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 ## Done
 
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived.)
-
-- **F-01: (foundation) słownik gmin i zamknięty katalog rodzajów usług są dostępne w aplikacji jako wspólne listy wyboru — tylko dane referencyjne, bez tabel profili.** — Archived 2026-09-24 → `context/archive/2026-09-24-gmina-and-service-dictionaries/`. Lesson: —.
