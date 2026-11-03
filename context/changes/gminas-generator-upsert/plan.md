@@ -302,11 +302,11 @@ Migracja schematu jest addytywna (nowe kolumny z wartością domyślną, `create
 
 #### Automated
 
-- [x] 3.1 `npx prettier --check README.md` przechodzi
-- [x] 3.2 `grep` znajduje `on delete restrict` w roadmapie
-- [x] 3.3 `README.md` nie zawiera już frazy o „plain insert statements”
+- [x] 3.1 `npx prettier --check README.md` przechodzi — ecaa41e
+- [x] 3.2 `grep` znajduje `on delete restrict` w roadmapie — ecaa41e
+- [x] 3.3 `README.md` nie zawiera już frazy o „plain insert statements” — ecaa41e
 
 #### Manual
 
-- [x] 3.4 Procedura z README daje migrację, która się stosuje
-- [x] 3.5 Wpis S-01 w roadmapie zawiera FK `on delete restrict`, filtrowanie aktywnych gmin i przepinanie przez `replaced_by`
+- [x] 3.4 Procedura z README daje migrację, która się stosuje — ecaa41e
+- [x] 3.5 Wpis S-01 w roadmapie zawiera FK `on delete restrict`, filtrowanie aktywnych gmin i przepinanie przez `replaced_by` — ecaa41e
