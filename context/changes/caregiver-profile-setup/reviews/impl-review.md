@@ -38,6 +38,8 @@ All Manual rows in Progress are `[x]`. The agent ran them (psql/curl, Claude in 
 
 All 8 findings are FIXED. F1 and F3 were checked at runtime: psql for F1, and smoke on the existing preview for both. F2 and F4–F6 passed lint, astro check and build, but **were not checked at runtime**: the preview on :4321 serves the build from before the fixes. To do: restart the preview (`npx astro preview stop` → `npx astro preview --background --port 4321`), run `npm run smoke`, and send a `PUT /api/caregiver/profile` with `displayName: "😀"` (expected 400 with `fieldErrors.displayName`).
 
+**Runtime check done (2026-11-03 18:40):** fresh `npm run build`, preview restarted on :4321, `npm run smoke` PASS (31/31). `PUT /api/caregiver/profile` with `displayName: "😀"` (JSON escape, so the shell cannot mangle the emoji) → 400 `{"fieldErrors":{"displayName":"Imię musi mieć od 2 do 60 znaków."}}`.
+
 ## Findings
 
 ### F1 — Limit 30 gmin do obejścia przez PostgREST
