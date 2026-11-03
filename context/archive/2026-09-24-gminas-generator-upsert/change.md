@@ -1,10 +1,10 @@
 ---
 change_id: gminas-generator-upsert
 title: Tryb aktualizacji w generatorze migracji gmin
-status: impl_reviewed
+status: archived
 created: 2026-09-24
 updated: 2026-11-03
-archived_at: null
+archived_at: 2026-11-03T14:10:49Z
 ---
 
 ## Notes
