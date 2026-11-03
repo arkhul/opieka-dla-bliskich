@@ -222,7 +222,11 @@ const buttonClass =
                   return (
                     <li>
                       <article class="min-w-0 space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
-                        <h3 class="text-lg font-semibold break-words">{caregiver.displayName}</h3>
+                        <h3 class="text-lg font-semibold break-words">
+                          <a href={`/opiekunowie/${caregiver.id}`} class:list={linkClass}>
+                            {caregiver.displayName}
+                          </a>
+                        </h3>
                         {caregiver.description && (
                           <p class="line-clamp-3 break-words text-blue-50">{caregiver.description}</p>
                         )}

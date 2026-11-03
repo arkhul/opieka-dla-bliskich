@@ -1,0 +1,120 @@
+---
+import { z } from "zod";
+import CaregiverPublicDetails from "@/components/caregiver/CaregiverPublicDetails.astro";
+import Topbar from "@/components/Topbar.astro";
+import Layout from "@/layouts/Layout.astro";
+import { formatPlPhone } from "@/lib/phone";
+import { getCaregiverContact, getPublicCaregiver } from "@/lib/services/caregiver.service";
+import { createClient } from "@/lib/supabase";
+import type { CaregiverContactDto, PublicCaregiverDto } from "@/types";
+
+// The page shows contact data: never cache it in shared caches or keep it on disk.
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+const parsedId = z.uuid().safeParse(Astro.params.id);
+
+let caregiver: PublicCaregiverDto | null = null;
+let contact: CaregiverContactDto | null = null;
+let notFound = !parsedId.success;
+let pageError: string | null = null;
+let noContactText: string | null = null;
+
+if (parsedId.success) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (!supabase) {
+    pageError = "Supabase nie jest skonfigurowany — dane kontaktowe są niedostępne.";
+  } else {
+    try {
+      // Whether the contact comes back is decided by RLS alone; the role is read only to explain an empty result.
+      [caregiver, contact] = await Promise.all([
+        getPublicCaregiver(supabase, parsedId.data),
+        getCaregiverContact(supabase, parsedId.data),
+      ]);
+      notFound = caregiver === null;
+
+      if (caregiver && !contact) {
+        const role = await Astro.locals.getRole().catch(() => "unknown" as const);
+        noContactText =
+          role === "coordinator" || role === "unknown"
+            ? "Dane kontaktowe są chwilowo niedostępne."
+            : "Dane kontaktowe opiekunów widzą tylko konta koordynatorów.";
+      }
+    } catch (error) {
+      // Server-side only: the visitor gets the generic message, the cause stays in the Worker logs.
+      // eslint-disable-next-line no-console
+      console.error("Caregiver contact failed to load", error);
+      pageError = "Nie udało się wczytać danych kontaktowych. Odśwież stronę za chwilę.";
+    }
+  }
+}
+
+// A profile that is not visible publicly gets no contact page, whatever RLS would return.
+if (notFound) {
+  contact = null;
+  Astro.response.status = 404;
+}
+
+const linkClass = "text-purple-300 transition-colors hover:text-purple-100 hover:underline";
+const smallLinkClass = "text-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline";
+const contactLinkClass = "text-purple-300 underline-offset-2 transition-colors hover:text-purple-100 hover:underline";
+---
+
+<Layout title={caregiver ? `Kontakt: ${caregiver.displayName}` : "Kontakt"}>
+  <div class="bg-cosmic min-h-screen w-full p-4 sm:p-8">
+    <Topbar />
+
+    <div class="mx-auto w-full max-w-3xl space-y-6 text-white">
+      {pageError ? (
+        <p class="rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">{pageError}</p>
+      ) : notFound || !caregiver ? (
+        <div class="space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
+          <h1 class="text-2xl font-bold">Nie znaleziono opiekuna</h1>
+          <p class="text-blue-100/80">Ten profil nie istnieje albo nie jest jeszcze widoczny.</p>
+          <a href="/opiekunowie" class:list={linkClass}>
+            Wróć do listy
+          </a>
+        </div>
+      ) : (
+        <>
+          <CaregiverPublicDetails caregiver={caregiver} />
+
+          <section class="space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
+            <h2 class="text-lg font-semibold">Dane kontaktowe</h2>
+            {contact ? (
+              <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
+                <dt class="text-blue-100/60">Telefon</dt>
+                <dd class="break-all">
+                  {contact.phone ? (
+                    <a href={`tel:${contact.phone}`} class:list={contactLinkClass}>
+                      {formatPlPhone(contact.phone)}
+                    </a>
+                  ) : (
+                    <span class="text-blue-100/50">nie podano</span>
+                  )}
+                </dd>
+                <dt class="text-blue-100/60">E-mail</dt>
+                <dd class="break-all">
+                  {contact.email ? (
+                    <a href={`mailto:${contact.email}`} class:list={contactLinkClass}>
+                      {contact.email}
+                    </a>
+                  ) : (
+                    <span class="text-blue-100/50">Opiekun nie podał e-maila</span>
+                  )}
+                </dd>
+              </dl>
+            ) : (
+              <p class="rounded-lg border border-amber-400/30 bg-amber-900/30 px-3 py-2 text-sm text-amber-200">
+                {noContactText}
+              </p>
+            )}
+          </section>
+
+          <a href={`/opiekunowie/${caregiver.id}`} class:list={smallLinkClass}>
+            Wróć do profilu
+          </a>
+        </>
+      )}
+    </div>
+  </div>
+</Layout>

@@ -1,0 +1,38 @@
+---
+import type { PublicCaregiverDto } from "@/types";
+
+// The public part of a caregiver profile, shared by the public and the protected page. It takes
+// PublicCaregiverDto only, so contact data cannot be passed to it.
+interface Props {
+  caregiver: PublicCaregiverDto;
+}
+
+const { caregiver } = Astro.props;
+---
+
+<article class="min-w-0 space-y-4 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
+  <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold break-words text-transparent">
+    {caregiver.displayName}
+  </h1>
+  {caregiver.description && <p class="break-words whitespace-pre-line text-blue-50">{caregiver.description}</p>}
+  {caregiver.services.length > 0 && (
+    <section class="space-y-2">
+      <h2 class="text-sm text-blue-100/60">Usługi</h2>
+      <ul class="flex flex-wrap gap-2">
+        {caregiver.services.map((service) => (
+          <li class="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs break-words">{service.label}</li>
+        ))}
+      </ul>
+    </section>
+  )}
+  {caregiver.gminas.length > 0 && (
+    <section class="space-y-2">
+      <h2 class="text-sm text-blue-100/60">Gminy, w których pracuje</h2>
+      <ul class="space-y-1 text-sm break-words text-blue-100/70">
+        {caregiver.gminas.map((gmina) => (
+          <li>{gmina.label}</li>
+        ))}
+      </ul>
+    </section>
+  )}
+</article>

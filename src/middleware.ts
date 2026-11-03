@@ -4,7 +4,7 @@ import { withNext } from "@/lib/redirect";
 import { createClient } from "@/lib/supabase";
 import type { AccountRole } from "@/types";
 
-const PROTECTED_ROUTES = ["/dashboard", "/profil"];
+const PROTECTED_ROUTES = ["/dashboard", "/profil", "/kontakt"];
 
 // The app lives on hosts search engines may index (*.workers.dev, preview URLs), and it serves caregiver
 // profiles and contact data: keep every response out of search results until indexing is a deliberate decision.

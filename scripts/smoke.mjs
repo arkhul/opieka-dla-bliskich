@@ -2,6 +2,8 @@
 // and the caregiver profile API and pages still work together, that RLS keeps contact data away from anon, from other caregivers
 // and from coordinators unless the profile is complete, and that the public caregiver list (search_caregivers) and the single
 // public profile (get_public_caregiver) hide incomplete profiles, filter hard and expose no contact data.
+// The pages /opiekunowie/<id> (public, no contact in the HTML) and /kontakt/<id> (protected, contact for coordinators only)
+// close the path from the list to a revealed phone number, including a new coordinator signing up with a return address.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -17,6 +19,7 @@ const email = `smoke-${stamp}@example.com`;
 const coordinatorEmail = `smoke-coordinator-${stamp}@example.com`;
 const secondCaregiverEmail = `smoke-caregiver2-${stamp}@example.com`;
 const thirdCaregiverEmail = `smoke-caregiver3-${stamp}@example.com`;
+const secondCoordinatorEmail = `smoke-coordinator2-${stamp}@example.com`;
 // Contact e-mail of the first caregiver: differs from the login e-mail, so absence checks look for the real value.
 const contactEmail = `kontakt-${stamp}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
@@ -26,6 +29,7 @@ let caregiverId = "";
 let coordinatorId = "";
 let coordinatorToken = "";
 let secondCaregiverToken = "";
+let secondCaregiverId = "";
 // Third caregiver: saves a profile without a phone, so it stays incomplete.
 let incompleteCaregiverId = "";
 let incompleteCaregiverToken = "";
@@ -309,9 +313,10 @@ const steps = [
         json: { email: secondCaregiverEmail, password, data: { role: "caregiver" } },
       });
       secondCaregiverToken = result.json?.access_token ?? "";
+      secondCaregiverId = result.json?.user?.id ?? "";
       return result;
     },
-    { status: 200, body: (json) => typeof json.access_token === "string" },
+    { status: 200, body: (json) => typeof json.access_token === "string" && typeof json.user?.id === "string" },
   ],
   [
     "second caregiver saves complete profile",
@@ -428,9 +433,39 @@ const steps = [
     () => request("/opiekunowie?gmina=1465011&strona=999"),
     { status: 200, html: (text) => text.includes("Nie ma takiej strony wyników") },
   ],
+  [
+    "list links to profile page",
+    () => request("/opiekunowie?gmina=1465011"),
+    { status: 200, html: (text) => text.includes(`href="/opiekunowie/${caregiverId}"`) },
+  ],
+  // The single public profile page, as anonymous user: no contact data in the HTML, incomplete profiles are 404.
+  [
+    "public profile page hides contact",
+    () => request(`/opiekunowie/${caregiverId}`),
+    {
+      status: 200,
+      headers: hasNoindex,
+      html: (text) =>
+        text.includes("Anna Smoke") &&
+        text.includes(`href="/kontakt/${caregiverId}"`) &&
+        [contactEmail, "+48600100200", "600100200", "600 100 200"].every((secret) => !text.includes(secret)),
+    },
+  ],
+  [
+    "public profile page 404 for incomplete profile",
+    () => request(`/opiekunowie/${incompleteCaregiverId}`),
+    { status: 404 },
+  ],
+  ["public profile page 404 for malformed id", () => request("/opiekunowie/nie-uuid"), { status: 404 }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profile API requires a session", () => request("/api/caregiver/profile"), { status: 401 }],
   ["profile page redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
+  [
+    "contact page redirects anonymous user",
+    () => request(`/kontakt/${caregiverId}`),
+    // exact: the redirect carries the page the anonymous user came from.
+    { status: 302, location: () => `/auth/signin?next=%2Fkontakt%2F${caregiverId}`, exact: true },
+  ],
   [
     "signup sends coordinator home",
     () =>
@@ -486,15 +521,60 @@ const steps = [
       }),
     { status: 403 },
   ],
+  // The contact page with a session. The cookie jar holds one session at a time: the coordinator (from "signup sends
+  // coordinator home"), then the first caregiver again, then a second, new coordinator.
+  [
+    "contact page shows contact to coordinator",
+    () => request(`/kontakt/${caregiverId}`),
+    {
+      status: 200,
+      headers: hasNoindex,
+      html: (text) => text.includes("tel:+48600100200") && text.includes(contactEmail),
+    },
+  ],
+  ["contact page 404 for incomplete profile", () => request(`/kontakt/${incompleteCaregiverId}`), { status: 404 }],
+  [
+    "signin caregiver again",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
+    { status: 302, location: "/profil", exact: true },
+  ],
+  [
+    "contact page hides contact from caregiver",
+    () => request(`/kontakt/${secondCaregiverId}`),
+    {
+      status: 200,
+      html: (text) =>
+        text.includes("Bartek Smoke") &&
+        text.includes("widzą tylko konta koordynatorów") &&
+        !text.includes("+48600100300") &&
+        !text.includes("600 100 300"),
+    },
+  ],
+  [
+    "new coordinator returns to contact after signup",
+    () =>
+      request("/api/auth/signup", {
+        method: "POST",
+        form: { email: secondCoordinatorEmail, password, role: "coordinator", next: `/kontakt/${caregiverId}` },
+      }),
+    { status: 302, location: () => `/kontakt/${caregiverId}`, exact: true },
+  ],
+  [
+    "new coordinator sees contact after signup",
+    () => request(`/kontakt/${caregiverId}`),
+    { status: 200, html: (text) => text.includes("tel:+48600100200") },
+  ],
 ];
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
   const actual = await run();
+  // location may be a function: ids learned by earlier steps are not known when the steps array is built.
+  const expectedLocation = typeof expected.location === "function" ? expected.location() : expected.location;
   const ok =
     actual.status === expected.status &&
-    (expected.location === undefined ||
-      (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
+    (expectedLocation === undefined ||
+      (expected.exact ? actual.location === expectedLocation : actual.location.startsWith(expectedLocation))) &&
     (expected.locationIncludes === undefined || actual.location.includes(expected.locationIncludes)) &&
     (expected.body === undefined || (actual.json !== undefined && expected.body(actual.json))) &&
     (expected.html === undefined || expected.html(actual.text)) &&
@@ -503,7 +583,7 @@ for (const [name, run, expected] of steps) {
   if (!ok) {
     failed++;
     console.log(
-      `      expected ${expected.status} ${expected.location ?? ""}${expected.locationIncludes ? ` + includes ${expected.locationIncludes}` : ""}${expected.body ? " + body check" : ""}` +
+      `      expected ${expected.status} ${expectedLocation ?? ""}${expected.locationIncludes ? ` + includes ${expected.locationIncludes}` : ""}${expected.body ? " + body check" : ""}` +
         `${expected.html ? " + html check" : ""}${expected.headers ? " + headers check" : ""}`,
     );
     if (expected.body) console.log(`      body ${JSON.stringify(actual.json)?.slice(0, 300)}`);

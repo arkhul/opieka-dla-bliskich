@@ -1,6 +1,7 @@
 import type { PostgrestSingleResponse, SupabaseClient } from "@supabase/supabase-js";
 import { formatGminaLabel } from "@/lib/gmina";
 import type {
+  CaregiverContactDto,
   CaregiverMissingItem,
   CaregiverSearchFilter,
   GminaKind,
@@ -145,14 +146,34 @@ export async function saveOwnProfile(supabase: SupabaseClient, cmd: SaveCaregive
 
 export const CAREGIVER_PAGE_SIZE = 20;
 
-// Row of search_caregivers(): public columns only. services/gminas are jsonb arrays built in SQL.
-interface SearchRow {
+// Row of search_caregivers() and get_public_caregiver(): public columns only. services/gminas are jsonb arrays built in SQL.
+interface PublicRow {
   user_id: string;
   display_name: string;
   description: string | null;
   services: ServiceDto[];
   gminas: Omit<GminaRow, "active">[];
+}
+
+interface SearchRow extends PublicRow {
   total_count: number | string;
+}
+
+function toPublicCaregiver(row: PublicRow): PublicCaregiverDto {
+  return {
+    id: row.user_id,
+    displayName: row.display_name,
+    description: row.description,
+    services: row.services.map(({ slug, label }) => ({ slug, label })),
+    gminas: row.gminas.map(({ teryt, name, kind, powiat, wojewodztwo }) => ({
+      teryt,
+      name,
+      kind,
+      powiat,
+      wojewodztwo,
+      label: formatGminaLabel({ name, kind, powiat, wojewodztwo }),
+    })),
+  };
 }
 
 async function runSearch(supabase: SupabaseClient, filter: CaregiverSearchFilter, limit: number, offset: number) {
@@ -190,20 +211,35 @@ export async function searchCaregivers(
     return { caregivers: [], total: page > 1 ? await countCaregivers(supabase, filter) : 0 };
   }
 
-  const caregivers = rows.map((row) => ({
-    id: row.user_id,
-    displayName: row.display_name,
-    description: row.description,
-    services: row.services.map(({ slug, label }) => ({ slug, label })),
-    gminas: row.gminas.map(({ teryt, name, kind, powiat, wojewodztwo }) => ({
-      teryt,
-      name,
-      kind,
-      powiat,
-      wojewodztwo,
-      label: formatGminaLabel({ name, kind, powiat, wojewodztwo }),
-    })),
-  }));
+  return { caregivers: rows.map(toPublicCaregiver), total: Number(rows[0].total_count) };
+}
 
-  return { caregivers, total: Number(rows[0].total_count) };
+// One public profile (the same visibility rule as the list), or null when it does not exist or is incomplete.
+export async function getPublicCaregiver(supabase: SupabaseClient, id: string): Promise<PublicCaregiverDto | null> {
+  const { data, error } = (await supabase.rpc("get_public_caregiver", {
+    p_caregiver_id: id,
+  })) as PostgrestSingleResponse<PublicRow[]>;
+
+  if (error) {
+    throw new Error(`Failed to read public caregiver: ${error.message}`);
+  }
+
+  return data.length > 0 ? toPublicCaregiver(data[0]) : null;
+}
+
+// Contact data of one caregiver: serve it only on protected routes. RLS decides who gets it (the owner, and
+// coordinators for a complete profile); null means nothing came back, whatever the reason.
+export async function getCaregiverContact(supabase: SupabaseClient, id: string): Promise<CaregiverContactDto | null> {
+  const { data, error } = await supabase
+    .from("caregiver_contacts")
+    .select("phone, email")
+    .eq("caregiver_id", id)
+    .maybeSingle()
+    .overrideTypes<ContactRow | null, { merge: false }>();
+
+  if (error) {
+    throw new Error(`Failed to read caregiver contact: ${error.message}`);
+  }
+
+  return data ? { phone: data.phone, email: data.email } : null;
 }

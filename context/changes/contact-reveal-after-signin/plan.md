@@ -336,27 +336,27 @@ Migracja tylko zmienia politykę i dodaje funkcję — bez zmian danych. Wycofan
 
 #### Automated
 
-- [x] 2.1 Lint przechodzi: `npm run lint`
-- [x] 2.2 Typy przechodzą: `npx astro check`
-- [x] 2.3 Build przechodzi: `npm run build`
-- [x] 2.4 Smoke przechodzi z krokami `next`: `npm run smoke`
+- [x] 2.1 Lint przechodzi: `npm run lint` — 2ff8b2f
+- [x] 2.2 Typy przechodzą: `npx astro check` — 2ff8b2f
+- [x] 2.3 Build przechodzi: `npm run build` — 2ff8b2f
+- [x] 2.4 Smoke przechodzi z krokami `next`: `npm run smoke` — 2ff8b2f
 
 #### Manual
 
-- [x] 2.5 Jako anonim wejście na `/dashboard` prowadzi do logowania, link „Załóż konto” zachowuje `next`, a po zalogowaniu opiekun wraca na `/dashboard` (nie na domyślny `/profil`)
-- [x] 2.6 Ręcznie wpisany `/auth/signin?next=https://example.com` po zalogowaniu prowadzi na trasę domyślną, nie na zewnętrzną domenę
+- [x] 2.5 Jako anonim wejście na `/dashboard` prowadzi do logowania, link „Załóż konto” zachowuje `next`, a po zalogowaniu opiekun wraca na `/dashboard` (nie na domyślny `/profil`) — 2ff8b2f
+- [x] 2.6 Ręcznie wpisany `/auth/signin?next=https://example.com` po zalogowaniu prowadzi na trasę domyślną, nie na zewnętrzną domenę — 2ff8b2f
 
 ### Phase 3: Strony profilu i kontaktu
 
 #### Automated
 
-- [ ] 3.1 Lint przechodzi: `npm run lint`
-- [ ] 3.2 Typy przechodzą: `npx astro check`
-- [ ] 3.3 Build przechodzi: `npm run build`
-- [ ] 3.4 Smoke przechodzi z krokami stron i pełnego przepływu: `npm run smoke`
+- [x] 3.1 Lint przechodzi: `npm run lint`
+- [x] 3.2 Typy przechodzą: `npx astro check`
+- [x] 3.3 Build przechodzi: `npm run build`
+- [x] 3.4 Smoke przechodzi z krokami stron i pełnego przepływu: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 Na ekranie 375 px anonim przechodzi: lista → karta → profil → „Pokaż dane kontaktowe” → „Załóż konto” (rola koordynatora zaznaczona) → rejestracja → `/kontakt/<id>` z klikalnym numerem i e-mailem
-- [ ] 3.6 W źródle strony `/opiekunowie/<id>` oglądanej jako anonim nie ma telefonu ani e-maila opiekuna, a odpowiedzi obu stron mają `X-Robots-Tag: noindex` i `Cache-Control: private, no-store`
-- [ ] 3.7 Zalogowany opiekun na `/kontakt/<id>` innego opiekuna widzi profil bez kontaktu i komunikat dla kont koordynatorów
+- [x] 3.5 Na ekranie 375 px anonim przechodzi: lista → karta → profil → „Pokaż dane kontaktowe” → „Załóż konto” (rola koordynatora zaznaczona) → rejestracja → `/kontakt/<id>` z klikalnym numerem i e-mailem
+- [x] 3.6 W źródle strony `/opiekunowie/<id>` oglądanej jako anonim nie ma telefonu ani e-maila opiekuna, a odpowiedzi obu stron mają `X-Robots-Tag: noindex` i `Cache-Control: private, no-store`
+- [x] 3.7 Zalogowany opiekun na `/kontakt/<id>` innego opiekuna widzi profil bez kontaktu i komunikat dla kont koordynatorów

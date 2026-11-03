@@ -21,13 +21,20 @@ export type AccountRole = "caregiver" | "coordinator";
 // Items the completeness rule (caregiver_profile_missing in SQL) can report, in its fixed order.
 export type CaregiverMissingItem = "display_name" | "phone" | "gminas" | "services";
 
+// A caregiver's contact data: serve it only on protected routes (to its owner, or to coordinators for a complete
+// profile), never on public pages or in public API responses.
+export interface CaregiverContactDto {
+  phone: string | null;
+  email: string | null;
+}
+
 // The caregiver's own profile, including contact data: serve it only to its owner, on protected routes.
 // services follow the catalogue sort_order, gminas are sorted by label; active = false marks a retired gmina.
 export interface OwnCaregiverProfileDto {
   id: string;
   displayName: string;
   description: string | null;
-  contact: { phone: string | null; email: string | null };
+  contact: CaregiverContactDto;
   gminas: (GminaDto & { active: boolean })[];
   services: ServiceDto[];
   missing: CaregiverMissingItem[];
