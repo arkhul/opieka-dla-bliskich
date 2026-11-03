@@ -1,6 +1,7 @@
 // Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow, the public dictionaries
-// and the caregiver profile API and pages still work together, that RLS keeps contact data away from anon and coordinators,
-// and that the public caregiver list (search_caregivers) hides incomplete profiles, filters hard and exposes no contact data.
+// and the caregiver profile API and pages still work together, that RLS keeps contact data away from anon, from other caregivers
+// and from coordinators unless the profile is complete, and that the public caregiver list (search_caregivers) and the single
+// public profile (get_public_caregiver) hide incomplete profiles, filter hard and expose no contact data.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -15,6 +16,7 @@ const stamp = Date.now();
 const email = `smoke-${stamp}@example.com`;
 const coordinatorEmail = `smoke-coordinator-${stamp}@example.com`;
 const secondCaregiverEmail = `smoke-caregiver2-${stamp}@example.com`;
+const thirdCaregiverEmail = `smoke-caregiver3-${stamp}@example.com`;
 // Contact e-mail of the first caregiver: differs from the login e-mail, so absence checks look for the real value.
 const contactEmail = `kontakt-${stamp}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
@@ -24,6 +26,9 @@ let caregiverId = "";
 let coordinatorId = "";
 let coordinatorToken = "";
 let secondCaregiverToken = "";
+// Third caregiver: saves a profile without a phone, so it stays incomplete.
+let incompleteCaregiverId = "";
+let incompleteCaregiverToken = "";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -86,6 +91,9 @@ const hasOneRow = (json) => Array.isArray(json) && json.length === 1;
 
 // Public caregiver list straight from the database, as anon (no token) unless one is given.
 const searchCaregivers = (args) => supabase("/rest/v1/rpc/search_caregivers", { method: "POST", json: args });
+// One public caregiver profile straight from the database, as anon unless a token is given.
+const getPublicCaregiver = (id) =>
+  supabase("/rest/v1/rpc/get_public_caregiver", { method: "POST", json: { p_caregiver_id: id } });
 const listsCaregiver = (json) => Array.isArray(json) && json.some((row) => row.user_id === caregiverId);
 const hidesCaregiver = (json) => Array.isArray(json) && !json.some((row) => row.user_id === caregiverId);
 const CONTACT_KEYS = ["phone", "email", "caregiver_contacts"];
@@ -283,6 +291,64 @@ const steps = [
     { status: 204 },
   ],
   [
+    "second caregiver cannot read first caregiver contact",
+    () => supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${caregiverId}`, { token: secondCaregiverToken }),
+    { status: 200, body: isEmptyArray },
+  ],
+  [
+    "third caregiver gets Supabase access token",
+    async () => {
+      const result = await supabase("/auth/v1/signup", {
+        method: "POST",
+        json: { email: thirdCaregiverEmail, password, data: { role: "caregiver" } },
+      });
+      incompleteCaregiverToken = result.json?.access_token ?? "";
+      incompleteCaregiverId = result.json?.user?.id ?? "";
+      return result;
+    },
+    { status: 200, body: (json) => typeof json.access_token === "string" && typeof json.user?.id === "string" },
+  ],
+  [
+    "third caregiver saves incomplete profile without phone",
+    () =>
+      supabase("/rest/v1/rpc/save_caregiver_profile", {
+        method: "POST",
+        token: incompleteCaregiverToken,
+        json: {
+          p_display_name: "Celina Smoke",
+          p_description: null,
+          p_phone: null,
+          p_email: `kontakt3-${stamp}@example.com`,
+          p_gminas: ["1465011"],
+          p_services: ["towarzystwo"],
+        },
+      }),
+    { status: 204 },
+  ],
+  // The single public profile, as anon: complete profile without contact data, incomplete profile hidden.
+  [
+    "anon reads public caregiver",
+    () => getPublicCaregiver(caregiverId),
+    {
+      status: 200,
+      body: (json) => {
+        const serialized = JSON.stringify(json);
+        return (
+          hasOneRow(json) &&
+          json[0].user_id === caregiverId &&
+          CONTACT_KEYS.every((key) => !(key in json[0])) &&
+          !serialized.includes(contactEmail) &&
+          !serialized.includes("+48600100200")
+        );
+      },
+    },
+  ],
+  [
+    "public caregiver hides incomplete profile",
+    () => getPublicCaregiver(incompleteCaregiverId),
+    { status: 200, body: isEmptyArray },
+  ],
+  [
     "search counts matches before the limit",
     () => searchCaregivers({ p_teryt: "1465011", p_limit: 1 }),
     { status: 200, body: (json) => hasOneRow(json) && Number(json[0].total_count) >= 2 },
@@ -358,8 +424,16 @@ const steps = [
     { status: 200, body: (json) => typeof json.access_token === "string" && typeof json.user?.id === "string" },
   ],
   [
-    "coordinator cannot read caregiver contact",
+    "coordinator reads complete caregiver contact",
     () => supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${caregiverId}`, { token: coordinatorToken }),
+    {
+      status: 200,
+      body: (json) => hasOneRow(json) && json[0].phone === "+48600100200" && json[0].email === contactEmail,
+    },
+  ],
+  [
+    "coordinator cannot read incomplete caregiver contact",
+    () => supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${incompleteCaregiverId}`, { token: coordinatorToken }),
     { status: 200, body: isEmptyArray },
   ],
   [
