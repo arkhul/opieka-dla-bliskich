@@ -123,7 +123,8 @@ const steps = [
   [
     "signin sends caregiver to profile",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/profil" },
+    // exact: "/profil/edycja" would also start with "/profil".
+    { status: 302, location: "/profil", exact: true },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["profile edit page renders for caregiver", () => request("/profil/edycja"), { status: 200 }],

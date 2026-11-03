@@ -1,18 +1,8 @@
 ---
-import { getAccountRole } from "@/lib/services/account.service";
-import { createClient } from "@/lib/supabase";
-import type { AccountRole } from "@/types";
-
-const { user } = Astro.locals;
+const { user, getRole } = Astro.locals;
 
 // Missing Supabase config or a failed role read behave like "no role": the generic dashboard link.
-let role: AccountRole | null = null;
-if (user) {
-  const supabase = createClient(Astro.request.headers, Astro.cookies);
-  if (supabase) {
-    role = await getAccountRole(supabase, user.id).catch(() => null);
-  }
-}
+const role = await getRole().catch(() => null);
 
 const accountLink =
   role === "caregiver" ? { href: "/profil", label: "Mój profil" } : { href: "/dashboard", label: "Panel" };

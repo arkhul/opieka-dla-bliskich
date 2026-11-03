@@ -3,7 +3,6 @@ import Topbar from "@/components/Topbar.astro";
 import Layout from "@/layouts/Layout.astro";
 import { missingItemLabel } from "@/lib/caregiver-profile";
 import { formatPlPhone } from "@/lib/phone";
-import { getAccountRole } from "@/lib/services/account.service";
 import { getOwnProfile } from "@/lib/services/caregiver.service";
 import { createClient } from "@/lib/supabase";
 import type { OwnCaregiverProfileDto } from "@/types";
@@ -25,7 +24,7 @@ if (!supabase) {
   pageError = "Supabase nie jest skonfigurowany — profil jest niedostępny.";
 } else {
   try {
-    const role = await getAccountRole(supabase, user.id);
+    const role = await Astro.locals.getRole();
     if (role !== "caregiver") {
       return Astro.redirect("/");
     }

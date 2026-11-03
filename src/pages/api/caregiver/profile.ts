@@ -15,6 +15,12 @@ function unique(values: string[]) {
   return [...new Set(values)];
 }
 
+// Counts code points like Postgres char_length(), so an emoji counts as one character
+// (string.length counts UTF-16 code units and would let the DB CHECK fail with a 500).
+function charCount(value: string) {
+  return Array.from(value).length;
+}
+
 // Optional text: missing, null or blank after trim -> null.
 const optionalText = z
   .string({ error: "Wartość musi być tekstem." })
@@ -29,9 +35,10 @@ const saveProfileSchema = z.object(
     displayName: z
       .string({ error: "Podaj imię." })
       .trim()
-      .min(2, { error: "Imię musi mieć od 2 do 60 znaków." })
-      .max(60, { error: "Imię musi mieć od 2 do 60 znaków." }),
-    description: optionalText.refine((value) => value === null || value.length <= 1000, {
+      .refine((value) => charCount(value) >= 2 && charCount(value) <= 60, {
+        error: "Imię musi mieć od 2 do 60 znaków.",
+      }),
+    description: optionalText.refine((value) => value === null || charCount(value) <= 1000, {
       error: "Opis może mieć najwyżej 1000 znaków.",
     }),
     phone: optionalText.transform((value, ctx) => {
@@ -67,7 +74,8 @@ const saveProfileSchema = z.object(
       })
       .default([])
       .transform(unique)
-      .refine((slugs) => slugs.length <= 13, { error: "Możesz wybrać najwyżej 13 usług." }),
+      // Input-size guard only: the catalogue (public.services) is checked by save_caregiver_profile().
+      .refine((slugs) => slugs.length <= 50, { error: "Lista usług jest zbyt długa." }),
   },
   { error: "Nieprawidłowe dane profilu." },
 );

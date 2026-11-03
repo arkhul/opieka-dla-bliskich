@@ -2,7 +2,6 @@
 import CaregiverProfileForm from "@/components/caregiver/CaregiverProfileForm";
 import Topbar from "@/components/Topbar.astro";
 import Layout from "@/layouts/Layout.astro";
-import { getAccountRole } from "@/lib/services/account.service";
 import { getOwnProfile } from "@/lib/services/caregiver.service";
 import { listServices } from "@/lib/services/dictionary.service";
 import { createClient } from "@/lib/supabase";
@@ -26,7 +25,7 @@ if (!supabase) {
   pageError = "Supabase nie jest skonfigurowany — edycja profilu jest niedostępna.";
 } else {
   try {
-    const role = await getAccountRole(supabase, user.id);
+    const role = await Astro.locals.getRole();
     if (role !== "caregiver") {
       return Astro.redirect("/");
     }
