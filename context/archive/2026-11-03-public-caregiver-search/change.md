@@ -1,10 +1,10 @@
 ---
 change_id: public-caregiver-search
 title: Public caregiver search
-status: impl_reviewed
+status: archived
 created: 2026-11-03
 updated: 2026-11-03
-archived_at: null
+archived_at: 2026-11-03T19:00:39Z
 ---
 
 ## Notes
