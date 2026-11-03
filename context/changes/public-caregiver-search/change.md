@@ -1,7 +1,7 @@
 ---
 change_id: public-caregiver-search
 title: Public caregiver search
-status: implementing
+status: implemented
 created: 2026-11-03
 updated: 2026-11-03
 archived_at: null

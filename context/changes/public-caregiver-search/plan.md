@@ -345,12 +345,12 @@ Migracja tylko dodaje funkcję — bez zmian danych i bez wpływu na istniejące
 
 #### Automated
 
-- [x] 3.1 Lint przechodzi: `npm run lint`
-- [x] 3.2 Typy przechodzą: `npx astro check`
-- [x] 3.3 Build przechodzi: `npm run build`
-- [x] 3.4 Smoke przechodzi: `npm run smoke`
+- [x] 3.1 Lint przechodzi: `npm run lint` — c2acf0e
+- [x] 3.2 Typy przechodzą: `npx astro check` — c2acf0e
+- [x] 3.3 Build przechodzi: `npm run build` — c2acf0e
+- [x] 3.4 Smoke przechodzi: `npm run smoke` — c2acf0e
 
 #### Manual
 
-- [x] 3.5 Pełny przepływ anonima: `/` → „Znajdź opiekuna” → filtr gminy i usługi → wyniki, po polsku, na 375 px
-- [x] 3.6 Topbar pokazuje „Opiekunowie” zalogowanemu opiekunowi, koordynatorowi i anonimowi
+- [x] 3.5 Pełny przepływ anonima: `/` → „Znajdź opiekuna” → filtr gminy i usługi → wyniki, po polsku, na 375 px — c2acf0e
+- [x] 3.6 Topbar pokazuje „Opiekunowie” zalogowanemu opiekunowi, koordynatorowi i anonimowi — c2acf0e
