@@ -1,0 +1,88 @@
+---
+import { z } from "zod";
+import CaregiverPublicDetails from "@/components/caregiver/CaregiverPublicDetails.astro";
+import Topbar from "@/components/Topbar.astro";
+import { buttonVariants } from "@/components/ui/button";
+import Layout from "@/layouts/Layout.astro";
+import { getPublicCaregiver } from "@/lib/services/caregiver.service";
+import { createClient } from "@/lib/supabase";
+import { cn } from "@/lib/utils";
+import type { PublicCaregiverDto } from "@/types";
+
+// The page is public and holds no contact data, but the Topbar shows the signed-in user's e-mail.
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+const { user } = Astro.locals;
+const parsedId = z.uuid().safeParse(Astro.params.id);
+
+let caregiver: PublicCaregiverDto | null = null;
+let notFound = !parsedId.success;
+let pageError: string | null = null;
+
+if (parsedId.success) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (!supabase) {
+    pageError = "Supabase nie jest skonfigurowany — profil jest niedostępny.";
+  } else {
+    try {
+      caregiver = await getPublicCaregiver(supabase, parsedId.data);
+      notFound = caregiver === null;
+    } catch (error) {
+      // Server-side only: the visitor gets the generic message, the cause stays in the Worker logs.
+      // eslint-disable-next-line no-console
+      console.error("Caregiver profile failed to load", error);
+      pageError = "Nie udało się wczytać profilu opiekuna. Odśwież stronę za chwilę.";
+    }
+  }
+}
+
+if (notFound) {
+  Astro.response.status = 404;
+}
+
+const linkClass = "text-purple-300 transition-colors hover:text-purple-100 hover:underline";
+const smallLinkClass = "text-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline";
+const contactButtonClass = cn(
+  buttonVariants({ size: "lg" }),
+  "bg-purple-600 text-white shadow-none hover:bg-purple-500",
+);
+---
+
+<Layout title={caregiver ? caregiver.displayName : "Opiekun"}>
+  <div class="bg-cosmic min-h-screen w-full p-4 sm:p-8">
+    <Topbar />
+
+    <div class="mx-auto w-full max-w-3xl space-y-6 text-white">
+      {pageError ? (
+        <p class="rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">{pageError}</p>
+      ) : notFound || !caregiver ? (
+        <div class="space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
+          <h1 class="text-2xl font-bold">Nie znaleziono opiekuna</h1>
+          <p class="text-blue-100/80">Ten profil nie istnieje albo nie jest jeszcze widoczny.</p>
+          <a href="/opiekunowie" class:list={linkClass}>
+            Wróć do listy
+          </a>
+        </div>
+      ) : (
+        <>
+          <CaregiverPublicDetails caregiver={caregiver} />
+
+          <div class="space-y-2">
+            <a href={`/kontakt/${caregiver.id}`} class:list={contactButtonClass}>
+              Pokaż dane kontaktowe
+            </a>
+            {!user && (
+              <p class="text-sm text-blue-100/70">
+                Dane kontaktowe widzą zalogowani koordynatorzy — konto koordynatora jest darmowe.
+              </p>
+            )}
+          </div>
+
+          <a href="/opiekunowie" class:list={smallLinkClass}>
+            Wróć do listy
+          </a>
+        </>
+      )}
+    </div>
+  </div>
+</Layout>

@@ -50,3 +50,32 @@ export async function searchGminas(supabase: SupabaseClient, query: string, limi
     label: formatGminaLabel({ name, kind, powiat, wojewodztwo }),
   }));
 }
+
+// One active gmina by TERC code, or null when it does not exist or has been retired.
+export async function getActiveGmina(supabase: SupabaseClient, teryt: string): Promise<GminaDto | null> {
+  const { data, error } = await supabase
+    .from("gminas")
+    .select("teryt, name, kind, powiat, wojewodztwo")
+    .eq("teryt", teryt)
+    .eq("active", true)
+    .maybeSingle()
+    .overrideTypes<GminaRow | null, { merge: false }>();
+
+  if (error) {
+    throw new Error(`Failed to read gmina: ${error.message}`);
+  }
+
+  if (!data) {
+    return null;
+  }
+
+  const { name, kind, powiat, wojewodztwo } = data;
+  return {
+    teryt: data.teryt,
+    name,
+    kind,
+    powiat,
+    wojewodztwo,
+    label: formatGminaLabel({ name, kind, powiat, wojewodztwo }),
+  };
+}

@@ -1,21 +1,25 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import SignUpForm from "@/components/auth/SignUpForm";
+import { safeNextPath, withNext } from "@/lib/redirect";
 
 const error = Astro.url.searchParams.get("error");
+const next = safeNextPath(Astro.url.searchParams.get("next"));
+// Someone sent here from a caregiver's contact page is looking for care: preselect that role (they can change it).
+const initialRole = next?.startsWith("/kontakt/") ? "coordinator" : undefined;
 ---
 
-<Layout title="Sign up">
+<Layout title="Rejestracja">
   <div class="bg-cosmic flex min-h-screen items-center justify-center p-4">
     <div class="w-full max-w-sm rounded-2xl border border-white/10 bg-white/10 p-8 text-white backdrop-blur-xl">
       <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
-        Sign up
+        Załóż konto
       </h1>
-      <SignUpForm serverError={error} client:load />
+      <SignUpForm serverError={error} next={next} initialRole={initialRole} client:load />
       <p class="mt-4 text-center text-sm text-blue-100/60">
-        Already have an account?{" "}
-        <a href="/auth/signin" class="text-purple-300 hover:underline">
-          Sign in
+        Masz już konto?{" "}
+        <a href={withNext("/auth/signin", next)} class="text-purple-300 hover:underline">
+          Zaloguj się
         </a>
       </p>
     </div>

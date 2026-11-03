@@ -18,7 +18,7 @@ Setup and the full script list: @README.md.
 
 ## Project Structure
 
-- `src/components/ui/`: shadcn/ui ("new-york"). Add components with `npx shadcn@latest add <name>`; do not hand-write them.
+- `src/components/ui/`: shadcn/ui ("new-york"). Add components with `npx shadcn@latest add <name>`; do not hand-write them. The CLI may generate `import { cn } from "cn"` and add the `cn` package: repoint the import to `@/lib/utils` and remove the dependency.
 - `src/lib/services/<entity>.service.ts` (e.g. `caregiver.service.ts`): functions that read or write Supabase for that entity. Endpoints in `src/pages/api/` call a service instead of querying Supabase directly. `src/lib/`: pure helpers without I/O. `src/types.ts`: shared entity/DTO types. Create each on first use.
 - `src/hooks/`: React hooks (the `hooks` alias in @components.json).
 - Import through the `@/*` alias, not relative paths.

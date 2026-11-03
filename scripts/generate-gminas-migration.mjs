@@ -2,6 +2,8 @@
 // Zero dependencies on purpose. One mode only (sync), so the same output works on an empty and on a populated table:
 // it upserts every gmina from the file and retires (active = false, never deletes) active gminas missing from it;
 // when only RODZ changed (same WOJ+POW+GMI), the new code is set as replaced_by automatically.
+// Caregiver gminas (public.caregiver_gminas) linked to a retired gmina are re-pointed to its replaced_by when that
+// successor is active; links to a retired gmina without an active successor are left as they are and listed in a notice.
 //   node scripts/generate-gminas-migration.mjs <path-to-TERC.csv> supabase/migrations/<YYYYMMDDHHmmss>_update_gminas.sql [--max-retired N]
 // --max-retired N: the migration aborts without changes if more than N gminas would be retired without a successor
 // (default 30; RODZ changes do not count). Refuses a TERC file whose STAN_NA is older than in existing migrations.
@@ -245,6 +247,7 @@ for (let i = 0; i < gminas.length; i += BATCH_SIZE) {
 // outside a transaction. The upsert runs before retiring, so every successor exists (FK) before replaced_by
 // points at it, and reactivated gminas get active = true and replaced_by = null in one statement (check constraint).
 // The successor of a retired gmina is the TERC code with the same WOJ+POW+GMI and a different RODZ.
+// Caregiver gminas are re-pointed last, after retiring and chain shortening, so replaced_by is final by then.
 const sync = `-- ---------------------------------------------------------------------------
 -- Threshold: abort before any change if more than max_retired gminas would be retired without a successor.
 -- The upsert does not touch gminas missing from TERC, so the count is the same as after it.
@@ -338,6 +341,42 @@ begin
     raise notice 'gminas sync: retired % gminas; with successor: %; without successor: %; shortened successor chains: %',
       cardinality(retired_codes), coalesce(replaced_list, 'none'), coalesce(orphan_list, 'none'), shortened_count;
   end if;
+end;
+$$;
+
+-- ---------------------------------------------------------------------------
+-- Re-point caregiver gminas from retired gminas to their active successors.
+-- Insert first, then delete: a caregiver who already has the successor, or two retired gminas with the same
+-- successor, do not break the primary key. Links to a retired gmina without an active successor are left
+-- as they are and listed in the notice, to be resolved by hand.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  repointed_count integer;
+  left_count integer;
+  left_list text;
+begin
+  insert into public.caregiver_gminas (caregiver_id, teryt)
+  select distinct cg.caregiver_id, n.teryt
+  from public.caregiver_gminas as cg
+  join public.gminas as g on g.teryt = cg.teryt and not g.active
+  join public.gminas as n on n.teryt = g.replaced_by and n.active
+  on conflict do nothing;
+
+  delete from public.caregiver_gminas as cg
+  using public.gminas as g
+  join public.gminas as n on n.teryt = g.replaced_by and n.active
+  where cg.teryt = g.teryt and not g.active;
+  get diagnostics repointed_count = row_count;
+
+  select count(*), string_agg(distinct cg.teryt, ', ' order by cg.teryt)
+  into left_count, left_list
+  from public.caregiver_gminas as cg
+  join public.gminas as g on g.teryt = cg.teryt
+  where not g.active;
+
+  raise notice 'gminas sync: re-pointed % caregiver gmina links to active successors; % links left on retired gminas without an active successor: %',
+    repointed_count, left_count, coalesce(left_list, 'none');
 end;
 $$;
 

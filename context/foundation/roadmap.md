@@ -42,9 +42,9 @@ Rodzinny koordynator opieki — np. córka organizująca stałą opiekę dla mat
 | ID   | Change ID                      | Outcome (user can …)                                                                  | Prerequisites | PRD refs                                  | Status   |
 | ---- | ------------------------------ | ------------------------------------------------------------------------------------- | ------------- | ----------------------------------------- | -------- |
 | F-01 | gmina-and-service-dictionaries | (foundation) słownik gmin i zamknięty katalog usług są dostępne w aplikacji            | —             | FR-005, FR-006, FR-009, FR-010            | done |
-| S-01 | caregiver-profile-setup        | opiekun zakłada konto i publikuje profil z kontaktem, gminami i usługami               | F-01          | FR-001, FR-003, FR-004, FR-005, FR-006    | proposed |
-| S-02 | public-caregiver-search        | każdy bez logowania przegląda listę opiekunów i filtruje ją po gminie i usłudze        | F-01, S-01    | US-01, FR-008, FR-009, FR-010             | proposed |
-| S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | proposed |
+| S-01 | caregiver-profile-setup        | opiekun zakłada konto i publikuje profil z kontaktem, gminami i usługami               | F-01          | FR-001, FR-003, FR-004, FR-005, FR-006    | done |
+| S-02 | public-caregiver-search        | każdy bez logowania przegląda listę opiekunów i filtruje ją po gminie i usłudze        | F-01, S-01    | US-01, FR-008, FR-009, FR-010             | done        |
+| S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | done        |
 | S-04 | caregiver-availability-filter  | opiekun ustawia dostępność (dni tygodnia × pory dnia), a koordynator po niej filtruje  | S-01, S-02    | FR-007, FR-011                            | proposed |
 | S-05 | ranked-match-results           | koordynator widzi wyniki uszeregowane według dopasowania, z oznaczeniem braków         | S-02, S-04    | US-01, FR-016                             | proposed |
 | S-06 | caregiver-profile-deletion     | opiekun trwale usuwa swój profil i znika on ze wszystkich wyników                      | S-01, S-02    | FR-003                                    | proposed |
@@ -102,7 +102,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Czy rejestracja wymaga potwierdzenia e-maila (PRD Open Question 1)? Planowanie może ruszyć na obecnej konfiguracji bez potwierdzenia. — Owner: user. Block: no.
 - **Risk:** Tu po raz pierwszy zapisujemy dane kontaktowe, więc już w tym wycinku muszą być oddzielone od publicznej części profilu regułami dostępu w bazie — dokładanie tego później oznacza migrację danych, które już wyciekały do publicznych zapytań.
 - **Constraints:** (z gminas-generator-upsert) FK z profili do `public.gminas(teryt)` z `on delete restrict`; w formularzu i walidacji wybór tylko gmin `active`; generator gmin musi dostać krok przepinający profile z kodu wycofanego na `replaced_by` wyłącznie na **aktywnego** następcę (np. `update … set teryt = n.teryt from public.gminas g join public.gminas n on n.teryt = g.replaced_by and n.active where … and not g.active`), bo `replaced_by` może wskazywać gminę później wycofaną bez następcy; profile wskazujące wycofaną gminę bez aktywnego następcy pozostają do ręcznego rozstrzygnięcia.
-- **Status:** proposed
+- **Status:** done
 
 ### S-02: Publiczna lista opiekunów z filtrami gminy i usługi
 
@@ -115,7 +115,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Czy publiczne strony profili (bez kontaktu) mają być indeksowane przez wyszukiwarki, czy tylko sama lista? — Owner: user. Block: no.
 - **Risk:** Pierwsza strona publiczna — tutaj najłatwiej o wyciek kontaktu przez szeroki select lub sitemapę; kryteria akceptacji US-01 (komunikat przy braku wyników, filtry łączone i zdejmowane pojedynczo, profil bez gminy niewidoczny) wchodzą w ten wycinek, a nie później.
-- **Status:** proposed
+- **Status:** done
 
 ### S-03: Odsłonięcie kontaktu po zalogowaniu
 
@@ -128,7 +128,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Czy rejestracja wymaga potwierdzenia e-maila (PRD Open Question 1)? Wpływa na to, czy kontakt odsłania się od razu po rejestracji. — Owner: user. Block: no.
 - **Risk:** To north star — zamyka główne kryterium sukcesu; dane kontaktowe mogą trafić wyłącznie na trasę chronioną, a publiczny host `*.workers.dev` nie może ich wystawić wyszukiwarkom.
-- **Status:** proposed
+- **Status:** done
 
 ### S-04: Dostępność opiekuna i filtr po dostępności
 
@@ -210,3 +210,6 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived.)
 
 - **F-01: (foundation) słownik gmin i zamknięty katalog rodzajów usług są dostępne w aplikacji jako wspólne listy wyboru — tylko dane referencyjne, bez tabel profili.** — Archived 2026-11-03 → `context/archive/2026-09-24-gmina-and-service-dictionaries/`. Lesson: —.
+- **S-01: opiekun zakłada konto, loguje się, uzupełnia dane kontaktowe, obsługiwane gminy i oferowane usługi, a następnie widzi swój profil.** — Archived 2026-11-03 → `context/archive/2026-11-03-caregiver-profile-setup/`. Lesson: —.
+- **S-02: każdy — także bez logowania — przegląda listę opiekunów i zawęża ją po gminie i rodzaju usługi; widzi profile bez danych kontaktowych.** — Archived 2026-11-03 → `context/archive/2026-11-03-public-caregiver-search/`. Lesson: —.
+- **S-03: koordynator z listy przechodzi do profilu, zakłada konto lub loguje się i widzi dane kontaktowe opiekuna.** — Archived 2026-11-03 → `context/archive/2026-11-03-contact-reveal-after-signin/`. Lesson: —.

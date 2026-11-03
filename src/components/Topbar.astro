@@ -1,31 +1,43 @@
 ---
-const { user } = Astro.locals;
+const { user, getRole } = Astro.locals;
+
+// Missing Supabase config or a failed role read behave like "no role": the generic dashboard link.
+const role = await getRole().catch(() => null);
+
+const accountLink =
+  role === "caregiver" ? { href: "/profil", label: "Mój profil" } : { href: "/dashboard", label: "Panel" };
 ---
 
-<div class="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
+<div class="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
   {user ? (
     <>
-      <span class="text-blue-100/70">{user.email}</span>
-      <div class="flex items-center gap-3">
-        <a href="/dashboard" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Dashboard
+      <span class="min-w-0 break-all text-blue-100/70">{user.email}</span>
+      <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+        <a href="/opiekunowie" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+          Opiekunowie
+        </a>
+        <a href={accountLink.href} class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+          {accountLink.label}
         </a>
         <form method="POST" action="/api/auth/signout">
           <button type="submit" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-            Sign out
+            Wyloguj się
           </button>
         </form>
       </div>
     </>
   ) : (
     <>
-      <span class="text-blue-100/70">Not signed in</span>
-      <div class="flex gap-3">
+      <span class="text-blue-100/70">Nie zalogowano</span>
+      <div class="flex flex-wrap gap-x-3 gap-y-1">
+        <a href="/opiekunowie" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+          Opiekunowie
+        </a>
         <a href="/auth/signin" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Sign in
+          Zaloguj się
         </a>
         <a href="/auth/signup" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Sign up
+          Załóż konto
         </a>
       </div>
     </>

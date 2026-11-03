@@ -1,0 +1,281 @@
+---
+import Topbar from "@/components/Topbar.astro";
+import { GminaSelect } from "@/components/search/GminaSelect";
+import Layout from "@/layouts/Layout.astro";
+import { buildCaregiverSearchHref, CAREGIVER_LIST_PATH, parseCaregiverSearch } from "@/lib/caregiver-search";
+import { CAREGIVER_PAGE_SIZE, countCaregivers, searchCaregivers } from "@/lib/services/caregiver.service";
+import { getActiveGmina, listServices } from "@/lib/services/dictionary.service";
+import { createClient } from "@/lib/supabase";
+import type { CaregiverSearchFilter, GminaDto, PublicCaregiverDto, ServiceDto } from "@/types";
+
+// The page is public and holds no contact data, but the Topbar shows the signed-in user's e-mail.
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+const MAX_GMINA_LABELS = 3;
+
+interface RelaxHint {
+  text: string;
+  href: string;
+  count: number;
+}
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+let pageError: string | null = null;
+let services: ServiceDto[] = [];
+let filter: CaregiverSearchFilter = { teryt: null, services: [] };
+let page = 1;
+let selectedGmina: GminaDto | null = null;
+let gminaNotice: string | null = null;
+let caregivers: PublicCaregiverDto[] = [];
+let total = 0;
+let hints: RelaxHint[] = [];
+
+if (!supabase) {
+  pageError = "Supabase nie jest skonfigurowany — lista jest niedostępna.";
+} else {
+  try {
+    services = await listServices(supabase);
+    ({ filter, page } = parseCaregiverSearch(
+      Astro.url.searchParams,
+      services.map((service) => service.slug),
+    ));
+
+    if (filter.teryt) {
+      selectedGmina = await getActiveGmina(supabase, filter.teryt);
+      if (!selectedGmina) {
+        filter = { ...filter, teryt: null };
+        gminaNotice = "Wybrana gmina nie istnieje lub została wycofana — wybierz ją ponownie.";
+      }
+    }
+
+    ({ caregivers, total } = await searchCaregivers(supabase, filter, page));
+
+    // Nothing matches: count what removing each single filter would give, so the hint links are honest.
+    if (total === 0 && (filter.teryt || filter.services.length > 0)) {
+      const candidates: { text: string; relaxed: CaregiverSearchFilter }[] = [];
+      if (filter.services.length > 0) {
+        candidates.push({ text: "Usuń filtr usług", relaxed: { ...filter, services: [] } });
+      }
+      if (filter.teryt) {
+        candidates.push({ text: "Usuń filtr gminy", relaxed: { ...filter, teryt: null } });
+      }
+      hints = await Promise.all(
+        candidates.map(async ({ text, relaxed }) => ({
+          text,
+          href: buildCaregiverSearchHref(relaxed),
+          count: await countCaregivers(supabase, relaxed),
+        })),
+      );
+    }
+  } catch (error) {
+    // Server-side only: the visitor gets the generic message, the cause stays in the Worker logs.
+    // eslint-disable-next-line no-console
+    console.error("Caregiver list failed to load", error);
+    pageError = "Nie udało się wczytać listy opiekunów. Odśwież stronę za chwilę.";
+  }
+}
+
+const hasFilters = filter.teryt !== null || filter.services.length > 0;
+const totalPages = Math.max(1, Math.ceil(total / CAREGIVER_PAGE_SIZE));
+const pageOutOfRange = total > 0 && caregivers.length === 0;
+const noNeighbourHint = hints.length === 2 && hints.every((hint) => hint.count === 0);
+const selectedServices = services.filter((service) => filter.services.includes(service.slug));
+
+// The gmina the visitor filtered by goes first on a card; the rest keep their order.
+function orderGminas(gminas: GminaDto[]): GminaDto[] {
+  return [...gminas].sort((a, b) => Number(b.teryt === filter.teryt) - Number(a.teryt === filter.teryt));
+}
+
+const linkClass = "text-purple-300 transition-colors hover:text-purple-100 hover:underline";
+const smallLinkClass = "text-sm text-purple-300 transition-colors hover:text-purple-100 hover:underline";
+const chipLinkClass =
+  "inline-flex max-w-full items-start gap-1.5 rounded-lg border border-white/20 bg-white/10 px-2.5 py-1 text-xs transition-colors hover:bg-white/20";
+const buttonClass =
+  "inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500";
+---
+
+<Layout title="Opiekunowie">
+  <div class="bg-cosmic min-h-screen w-full p-4 sm:p-8">
+    <Topbar />
+
+    <div class="mx-auto w-full max-w-3xl space-y-6 text-white">
+      <h1 class="bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+        Opiekunowie
+      </h1>
+
+      {pageError ? (
+        <p class="rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">{pageError}</p>
+      ) : (
+        <>
+          <form
+            method="get"
+            action={CAREGIVER_LIST_PATH}
+            class="space-y-5 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-6"
+          >
+            <fieldset class="min-w-0 space-y-2">
+              <legend class="mb-2 text-sm font-medium text-blue-100/80">Gmina</legend>
+              <GminaSelect name="gmina" initial={selectedGmina} client:load />
+              {gminaNotice && (
+                <p class="rounded-lg border border-amber-400/30 bg-amber-900/30 px-3 py-2 text-sm text-amber-200">
+                  {gminaNotice}
+                </p>
+              )}
+            </fieldset>
+
+            <fieldset class="min-w-0">
+              <legend class="mb-2 text-sm font-medium text-blue-100/80">
+                Rodzaj usług (opiekun musi oferować wszystkie wybrane)
+              </legend>
+              <div class="grid gap-2 sm:grid-cols-2">
+                {services.map((service) => (
+                  <label class="flex min-w-0 cursor-pointer items-start gap-2 text-sm text-blue-50">
+                    <input
+                      type="checkbox"
+                      name="usluga"
+                      value={service.slug}
+                      checked={filter.services.includes(service.slug)}
+                      class="mt-0.5 size-4 shrink-0 accent-purple-500"
+                    />
+                    <span class="min-w-0 break-words">{service.label}</span>
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <div class="flex flex-wrap items-center gap-4">
+              <button type="submit" class:list={buttonClass}>
+                Pokaż wyniki
+              </button>
+              <a href={CAREGIVER_LIST_PATH} class:list={smallLinkClass}>
+                Wyczyść filtry
+              </a>
+            </div>
+          </form>
+
+          {hasFilters && (
+            <ul class="flex flex-wrap gap-2" aria-label="Aktywne filtry">
+              {selectedGmina && (
+                <li class="max-w-full">
+                  <a href={buildCaregiverSearchHref({ ...filter, teryt: null })} class:list={chipLinkClass}>
+                    <span class="min-w-0 break-words">Gmina: {selectedGmina.label}</span>
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">(usuń filtr)</span>
+                  </a>
+                </li>
+              )}
+              {selectedServices.map((service) => (
+                <li class="max-w-full">
+                  <a
+                    href={buildCaregiverSearchHref({
+                      ...filter,
+                      services: filter.services.filter((slug) => slug !== service.slug),
+                    })}
+                    class:list={chipLinkClass}
+                  >
+                    <span class="min-w-0 break-words">{service.label}</span>
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">(usuń filtr)</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          <section class="space-y-4">
+            <h2 class="text-lg font-semibold">Wyniki: {total}</h2>
+
+            {total === 0 && !hasFilters && (
+              <p class="text-blue-100/80">Nie ma jeszcze opiekunów z uzupełnionym profilem.</p>
+            )}
+
+            {total === 0 && hasFilters && (
+              <div class="space-y-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm">
+                <p class="text-blue-50">Żaden opiekun nie spełnia wszystkich wybranych warunków.</p>
+                <ul class="space-y-1">
+                  {hints.map((hint) => (
+                    <li>
+                      <a href={hint.href} class:list={linkClass}>
+                        {hint.text} (wyniki: {hint.count})
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                {noNeighbourHint && <p class="text-blue-100/70">Spróbuj sąsiedniej gminy.</p>}
+              </div>
+            )}
+
+            {pageOutOfRange && (
+              <div class="space-y-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm">
+                <p class="text-blue-50">Nie ma takiej strony wyników.</p>
+                <a href={buildCaregiverSearchHref(filter)} class:list={linkClass}>
+                  Wróć do pierwszej strony wyników
+                </a>
+              </div>
+            )}
+
+            {caregivers.length > 0 && (
+              <ul class="space-y-4">
+                {caregivers.map((caregiver) => {
+                  const gminas = orderGminas(caregiver.gminas);
+                  const shown = gminas.slice(0, MAX_GMINA_LABELS);
+                  const hidden = gminas.length - shown.length;
+                  return (
+                    <li>
+                      <article class="min-w-0 space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
+                        <h3 class="text-lg font-semibold break-words">
+                          <a href={`/opiekunowie/${caregiver.id}`} class:list={linkClass}>
+                            {caregiver.displayName}
+                          </a>
+                        </h3>
+                        {caregiver.description && (
+                          <p class="line-clamp-3 break-words text-blue-50">{caregiver.description}</p>
+                        )}
+                        {caregiver.services.length > 0 && (
+                          <ul class="flex flex-wrap gap-2">
+                            {caregiver.services.map((service) => (
+                              <li class="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs break-words">
+                                {service.label}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        {shown.length > 0 && (
+                          <p class="text-sm break-words text-blue-100/70">
+                            {shown.map((gmina) => gmina.label).join("; ")}
+                            {hidden > 0 && ` +${hidden}`}
+                          </p>
+                        )}
+                      </article>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+
+            {total > CAREGIVER_PAGE_SIZE && caregivers.length > 0 && (
+              <nav aria-label="Stronicowanie" class="flex items-center justify-between gap-3 text-sm">
+                {page > 1 ? (
+                  <a href={buildCaregiverSearchHref(filter, page - 1)} class:list={linkClass}>
+                    Poprzednia
+                  </a>
+                ) : (
+                  <span class="text-white/30">Poprzednia</span>
+                )}
+                <span class="text-blue-100/70">
+                  Strona {page} z {totalPages}
+                </span>
+                {page < totalPages ? (
+                  <a href={buildCaregiverSearchHref(filter, page + 1)} class:list={linkClass}>
+                    Następna
+                  </a>
+                ) : (
+                  <span class="text-white/30">Następna</span>
+                )}
+              </nav>
+            )}
+          </section>
+        </>
+      )}
+    </div>
+  </div>
+</Layout>

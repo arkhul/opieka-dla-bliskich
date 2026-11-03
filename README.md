@@ -55,7 +55,7 @@ npm run dev
 - `npm run lint` - Run ESLint with type-checked rules
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run format` - Run Prettier
-- `npm run smoke` - Smoke test the auth flow against a running server (`BASE_URL`, defaults to `http://localhost:4321`)
+- `npm run smoke` - Smoke test the auth flow, the caregiver profile API and RLS against a running server (`BASE_URL`, defaults to `http://localhost:4321`; reads `SUPABASE_URL`/`SUPABASE_KEY` from `.env`)
 
 ## Project Structure
 
@@ -150,6 +150,17 @@ select teryt, name, replaced_by from public.gminas where not active order by ter
 
 For gminas merged or abolished without an automatic successor, write a separate migration by hand that sets `replaced_by`. Do not edit the generated file.
 
+Migracja przepina też profile opiekunów: każde powiązanie w `public.caregiver_gminas` z wycofaną gminą przechodzi na jej `replaced_by`, jeśli ten następca jest aktywny (opiekun, który ma już następcę, zachowuje jedno powiązanie). Powiązania z wycofaną gminą bez aktywnego następcy zostają bez zmian, więc w profilu opiekuna gmina nadal widnieje jako wycofana; komunikat `gminas sync: re-pointed N caregiver gmina links …; M links left on retired gminas without an active successor: <kody>` wymienia te kody. Rozstrzygnij je, ustawiając `replaced_by` w ręcznie napisanej migracji (kolejna wygenerowana migracja je przepnie), albo zostaw opiekunom do wymiany w profilu. `npx supabase migration up` nie wyświetla komunikatów `NOTICE` (a `npx supabase db push` może ich nie pokazać), więc pozostawione powiązania znajdziesz zapytaniem:
+
+```sql
+select cg.teryt, g.name, g.replaced_by, count(*) as caregivers
+from public.caregiver_gminas as cg
+join public.gminas as g on g.teryt = cg.teryt
+where not g.active
+group by cg.teryt, g.name, g.replaced_by
+order by cg.teryt;
+```
+
 ### Using a cloud Supabase project instead
 
 If you prefer to use a hosted Supabase project, add these variables to your `.env` and `.dev.vars` files:
@@ -176,14 +187,16 @@ Users can then sign in immediately after sign-up without clicking a confirmation
 
 ### Auth routes
 
-| Route                 | Description                                                             |
-| --------------------- | ----------------------------------------------------------------------- |
-| `/auth/signin`        | Email/password sign-in form                                             |
-| `/auth/signup`        | Email/password sign-up form                                             |
-| `/auth/confirm-email` | Post-signup "check your inbox" page                                     |
-| `/dashboard`          | Example protected page (redirects to `/auth/signin` if unauthenticated) |
+| Route                 | Description                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------- |
+| `/auth/signin`        | Email/password sign-in form                                                                    |
+| `/auth/signup`        | Email/password sign-up form                                                                    |
+| `/auth/confirm-email` | Post-signup "check your inbox" page                                                            |
+| `/dashboard`          | Example protected page (redirects to `/auth/signin` if unauthenticated)                        |
+| `/opiekunowie/[id]`   | Public caregiver profile (no contact data; 404 for a missing or incomplete profile)            |
+| `/kontakt/[id]`       | Protected: caregiver contact data (phone, e-mail), shown to coordinators only (decided by RLS) |
 
-Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication.
+Route protection is handled in `src/middleware.ts`. Add paths to the `PROTECTED_ROUTES` array there to require authentication. An anonymous visitor is redirected to `/auth/signin?next=<the page they asked for>`; after sign-in or sign-up (coordinators) they return there. `next` must be a local path (`src/lib/redirect.ts`), anything else is ignored.
 
 ## Deployment
 
@@ -213,6 +226,8 @@ BASE_URL=http://localhost:4321 npm run smoke
 ```
 
 It needs a reachable Supabase instance (local or cloud) with email confirmation disabled.
+
+Smoke sprawdza też API profilu opiekuna (`GET`/`PUT /api/caregiver/profile`: brak profilu, walidacja telefonu, zapis kompletnego profilu, 401 bez sesji, 403 dla koordynatora), strony profilu (`/profil` i `/profil/edycja` renderują się opiekunowi, anonim trafia na `/auth/signin`, koordynator na `/`) oraz rozdział danych przez RLS, wywołując REST Supabase bezpośrednio: jako `anon` czyta publiczną część profilu i gminy, ale z `caregiver_contacts` i `accounts` dostaje pustą listę; zalogowany koordynator nie widzi cudzego kontaktu i nie może utworzyć profilu opiekuna. Sprawdza też publiczną listę opiekunów: funkcję `search_caregivers` wywołaną jako `anon` (niekompletny profil jest ukryty, filtr gminy, wymóg wszystkich wybranych usług, `total_count` liczony przed limitem, brak danych kontaktowych w wyniku), stronę `/opiekunowie` renderowaną anonimowi (profil „Anna Smoke” na liście, brak telefonu i e-maila w HTML, podpowiedzi przy braku wyników, ignorowanie błędnych parametrów, komunikaty o nieznanej gminie i stronie poza zakresem), nagłówek `X-Robots-Tag: noindex` oraz to, że strona główna zawiera link do listy. Do tych kroków `npm run smoke` wczytuje `SUPABASE_URL` i `SUPABASE_KEY` (klucz `anon`) z `.env` (`node --env-file-if-exists=.env`); można je też podać w zmiennych środowiskowych. Bez nich skrypt kończy się błędem, zanim wykona jakikolwiek krok. Sprawdza też odsłonięcie kontaktu: koordynator czyta przez RLS kontakt kompletnego profilu, ale nie profilu niekompletnego (ani nikt poza właścicielem i koordynatorami); funkcja `get_public_caregiver` zwraca anonimowi profil bez kontaktu; karty listy linkują do `/opiekunowie/<id>`; strona profilu nie zawiera w HTML telefonu ani e-maila i daje 404 dla profilu niekompletnego i błędnego UUID; `/kontakt/<id>` odsyła anonima na `/auth/signin?next=…`, pokazuje koordynatorowi telefon (`tel:`) i e-mail, a opiekunowi — komunikat bez kontaktu; nowy koordynator rejestruje się z `next=/kontakt/<id>` i wraca na tę stronę z numerem. Parametr `next` jest też sprawdzany w logowaniu (powrót, ignorowanie zewnętrznych adresów, zachowanie po błędzie). Każde uruchomienie zakłada w bazie pięć kont `smoke-*@example.com` (opiekuna, drugiego i trzeciego opiekuna oraz dwóch koordynatorów) oraz profile „Anna Smoke”, „Bartek Smoke” i „Celina Smoke” (niekompletny).
 
 > **Note:** this script exists primarily to guard the development of the starter itself — it is a fast sanity check that dependency upgrades did not break the build, the Cloudflare adapter or the Supabase auth flow. It is **not** a substitute for a real test suite. Once you build your own product on top of this starter, add proper tests (unit, integration, end-to-end) suited to your application.
 

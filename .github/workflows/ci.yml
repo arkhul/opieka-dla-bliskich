@@ -35,9 +35,10 @@ jobs:
         with:
           node-version: 22
           cache: npm
+      # Pinned to the local CLI version: v3 rejects the [inbucket] section of supabase/config.toml.
       - uses: supabase/setup-cli@v3
         with:
-          version: latest
+          version: 2.117.0
       - run: npm ci
       # Anonymous pulls of Supabase images from ghcr.io hit shared rate limits (toomanyrequests).
       - name: Log in to ghcr.io
