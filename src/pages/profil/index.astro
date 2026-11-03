@@ -1,0 +1,146 @@
+---
+import Topbar from "@/components/Topbar.astro";
+import Layout from "@/layouts/Layout.astro";
+import { missingItemLabel } from "@/lib/caregiver-profile";
+import { formatPlPhone } from "@/lib/phone";
+import { getAccountRole } from "@/lib/services/account.service";
+import { getOwnProfile } from "@/lib/services/caregiver.service";
+import { createClient } from "@/lib/supabase";
+import type { OwnCaregiverProfileDto } from "@/types";
+
+// The page shows the owner's contact data: never cache it in shared caches or keep it on disk.
+Astro.response.headers.set("Cache-Control", "private, no-store");
+
+// The middleware already sends anonymous users to sign in; this only narrows the type.
+const { user } = Astro.locals;
+if (!user) {
+  return Astro.redirect("/auth/signin");
+}
+
+const supabase = createClient(Astro.request.headers, Astro.cookies);
+let profile: OwnCaregiverProfileDto | null = null;
+let pageError: string | null = null;
+
+if (!supabase) {
+  pageError = "Supabase nie jest skonfigurowany — profil jest niedostępny.";
+} else {
+  try {
+    const role = await getAccountRole(supabase, user.id);
+    if (role !== "caregiver") {
+      return Astro.redirect("/");
+    }
+    profile = await getOwnProfile(supabase, user.id);
+  } catch {
+    pageError = "Nie udało się wczytać profilu. Odśwież stronę za chwilę.";
+  }
+}
+
+const missingText = profile?.missing.map(missingItemLabel).join(", ") ?? "";
+---
+
+<Layout title="Mój profil">
+  <div class="bg-cosmic min-h-screen w-full p-4 sm:p-8">
+    <Topbar />
+
+    <div class="mx-auto w-full max-w-2xl rounded-2xl border border-white/10 bg-white/10 p-5 text-white backdrop-blur-xl sm:p-8">
+      <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-2xl font-bold text-transparent">
+        Mój profil
+      </h1>
+
+      {pageError ? (
+        <p class="rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">{pageError}</p>
+      ) : !profile ? (
+        <div class="space-y-4">
+          <p class="text-blue-100/80">Nie masz jeszcze profilu. Uzupełnij go, aby koordynatorzy mogli Cię znaleźć.</p>
+          <a
+            href="/profil/edycja"
+            class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500"
+          >
+            Utwórz profil
+          </a>
+        </div>
+      ) : (
+        <div class="space-y-6">
+          {profile.missing.length === 0 ? (
+            <p class="rounded-lg border border-emerald-400/30 bg-emerald-900/30 px-3 py-2 text-sm text-emerald-200">
+              Profil jest kompletny
+            </p>
+          ) : (
+            <p class="rounded-lg border border-amber-400/30 bg-amber-900/30 px-3 py-2 text-sm text-amber-200">
+              Profil nie będzie widoczny dla koordynatorów, dopóki nie uzupełnisz: {missingText}.
+            </p>
+          )}
+
+          <section>
+            <h2 class="mb-1 text-sm text-blue-100/60">Imię</h2>
+            <p class="text-lg font-semibold break-words">{profile.displayName}</p>
+          </section>
+
+          <section>
+            <h2 class="mb-1 text-sm text-blue-100/60">O mnie</h2>
+            {profile.description ? (
+              <p class="break-words whitespace-pre-line text-blue-50">{profile.description}</p>
+            ) : (
+              <p class="text-blue-100/50">Brak opisu</p>
+            )}
+          </section>
+
+          <section>
+            <h2 class="mb-2 text-sm text-blue-100/60">Usługi</h2>
+            {profile.services.length > 0 ? (
+              <ul class="flex flex-wrap gap-2">
+                {profile.services.map((service) => (
+                  <li class="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-sm">{service.label}</li>
+                ))}
+              </ul>
+            ) : (
+              <p class="text-blue-100/50">Nie wybrano usług</p>
+            )}
+          </section>
+
+          <section>
+            <h2 class="mb-2 text-sm text-blue-100/60">Gminy, w których pracujesz</h2>
+            {profile.gminas.length > 0 ? (
+              <ul class="space-y-1 text-sm">
+                {profile.gminas.map((gmina) =>
+                  gmina.active ? (
+                    <li class="break-words">{gmina.label}</li>
+                  ) : (
+                    <li class="break-words text-blue-100/60">
+                      {gmina.label} <span class="font-medium text-amber-300">(gmina wycofana — usuń ją w edycji)</span>
+                    </li>
+                  ),
+                )}
+              </ul>
+            ) : (
+              <p class="text-blue-100/50">Nie wybrano gmin</p>
+            )}
+          </section>
+
+          <section>
+            <h2 class="mb-2 text-sm text-blue-100/60">Kontakt</h2>
+            <dl class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-sm">
+              <dt class="text-blue-100/60">Telefon</dt>
+              <dd class="break-all">
+                {profile.contact.phone ? (
+                  formatPlPhone(profile.contact.phone)
+                ) : (
+                  <span class="text-blue-100/50">nie podano</span>
+                )}
+              </dd>
+              <dt class="text-blue-100/60">E-mail</dt>
+              <dd class="break-all">{profile.contact.email ?? <span class="text-blue-100/50">nie podano</span>}</dd>
+            </dl>
+          </section>
+
+          <a
+            href="/profil/edycja"
+            class="inline-flex items-center justify-center rounded-lg bg-purple-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-purple-500"
+          >
+            Edytuj profil
+          </a>
+        </div>
+      )}
+    </div>
+  </div>
+</Layout>

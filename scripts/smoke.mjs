@@ -1,5 +1,5 @@
 // Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow, the public dictionaries
-// and the caregiver profile API still work together, and that RLS keeps contact data away from anon and coordinators.
+// and the caregiver profile API and pages still work together, and that RLS keeps contact data away from anon and coordinators.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -126,6 +126,7 @@ const steps = [
     { status: 302, location: "/profil" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
+  ["profile edit page renders for caregiver", () => request("/profil/edycja"), { status: 200 }],
   [
     "new caregiver has no profile yet",
     () => request("/api/caregiver/profile"),
@@ -151,6 +152,7 @@ const steps = [
         isEmptyArray(json.profile.missing),
     },
   ],
+  ["profile page renders for caregiver", () => request("/profil"), { status: 200 }],
   // RLS, straight against Supabase as anon: the public part is readable, contact data and roles are not.
   [
     "anon reads public caregiver profile",
@@ -176,11 +178,18 @@ const steps = [
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profile API requires a session", () => request("/api/caregiver/profile"), { status: 401 }],
+  ["profile page redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
   [
     "signup sends coordinator home",
     () =>
       request("/api/auth/signup", { method: "POST", form: { email: coordinatorEmail, password, role: "coordinator" } }),
     // exact: every redirect starts with "/", including the sign-up error page.
+    { status: 302, location: "/", exact: true },
+  ],
+  [
+    "profile page sends coordinator home",
+    () => request("/profil"),
+    // exact: "/auth/signin" would also start with "/".
     { status: 302, location: "/", exact: true },
   ],
   [

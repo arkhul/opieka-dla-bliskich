@@ -520,27 +520,27 @@ Odczyt własnego profilu to jedno zapytanie z osadzeniami plus jedno RPC; zapis 
 
 #### Automated
 
-- [x] 4.1 Lint przechodzi: `npm run lint`
-- [x] 4.2 Typy przechodzą: `npx astro check`
-- [x] 4.3 Build przechodzi: `npm run build`
-- [x] 4.4 Smoke z krokami profilu i RLS przechodzi: `npm run smoke`
+- [x] 4.1 Lint przechodzi: `npm run lint` — 53bb039
+- [x] 4.2 Typy przechodzą: `npx astro check` — 53bb039
+- [x] 4.3 Build przechodzi: `npm run build` — 53bb039
+- [x] 4.4 Smoke z krokami profilu i RLS przechodzi: `npm run smoke` — 53bb039
 
 #### Manual
 
-- [x] 4.5 Wycofana gmina: `PUT` zwraca 400 z kodem gminy, `GET` pokazuje `active: false` i brak `gminas`
+- [x] 4.5 Wycofana gmina: `PUT` zwraca 400 z kodem gminy, `GET` pokazuje `active: false` i brak `gminas` — 53bb039
 
 ### Phase 5: Strony profilu
 
 #### Automated
 
-- [ ] 5.1 Lint przechodzi: `npm run lint`
-- [ ] 5.2 Typy przechodzą: `npx astro check`
-- [ ] 5.3 Build przechodzi: `npm run build`
-- [ ] 5.4 Smoke ze stronami profilu przechodzi: `npm run smoke`
+- [x] 5.1 Lint przechodzi: `npm run lint`
+- [x] 5.2 Typy przechodzą: `npx astro check`
+- [x] 5.3 Build przechodzi: `npm run build`
+- [x] 5.4 Smoke ze stronami profilu przechodzi: `npm run smoke`
 
 #### Manual
 
-- [ ] 5.5 Pełny przepływ w przeglądarce od rejestracji do „Profil jest kompletny”
-- [ ] 5.6 Autocomplete bez diakrytyków, limit 30 gmin, brak duplikatów
-- [ ] 5.7 Formularz i podgląd używalne przy 375 px
-- [ ] 5.8 Strony publiczne i API słowników nie zawierają kontaktu opiekuna
+- [x] 5.5 Pełny przepływ w przeglądarce od rejestracji do „Profil jest kompletny”
+- [x] 5.6 Autocomplete bez diakrytyków, limit 30 gmin, brak duplikatów
+- [x] 5.7 Formularz i podgląd używalne przy 375 px
+- [x] 5.8 Strony publiczne i API słowników nie zawierają kontaktu opiekuna

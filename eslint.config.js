@@ -67,6 +67,8 @@ const astroConfig = defineConfig({
     "astro/no-set-html-directive": "error",
     "astro/no-unused-css-selector": "warn",
     "astro/prefer-class-list-directive": "warn",
+    // Crashes on a top-level `return Astro.redirect(...)` in frontmatter (a return without an enclosing function).
+    "@typescript-eslint/no-misused-promises": "off",
   },
 });
 
