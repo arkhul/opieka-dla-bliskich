@@ -55,7 +55,7 @@ npm run dev
 - `npm run lint` - Run ESLint with type-checked rules
 - `npm run lint:fix` - Auto-fix ESLint issues
 - `npm run format` - Run Prettier
-- `npm run smoke` - Smoke test the auth flow against a running server (`BASE_URL`, defaults to `http://localhost:4321`)
+- `npm run smoke` - Smoke test the auth flow, the caregiver profile API and RLS against a running server (`BASE_URL`, defaults to `http://localhost:4321`; reads `SUPABASE_URL`/`SUPABASE_KEY` from `.env`)
 
 ## Project Structure
 
@@ -224,6 +224,8 @@ BASE_URL=http://localhost:4321 npm run smoke
 ```
 
 It needs a reachable Supabase instance (local or cloud) with email confirmation disabled.
+
+Smoke sprawdza też API profilu opiekuna (`GET`/`PUT /api/caregiver/profile`: brak profilu, walidacja telefonu, zapis kompletnego profilu, 401 bez sesji, 403 dla koordynatora) oraz rozdział danych przez RLS, wywołując REST Supabase bezpośrednio: jako `anon` czyta publiczną część profilu i gminy, ale z `caregiver_contacts` i `accounts` dostaje pustą listę; zalogowany koordynator nie widzi cudzego kontaktu i nie może utworzyć profilu opiekuna. Do tych kroków `npm run smoke` wczytuje `SUPABASE_URL` i `SUPABASE_KEY` (klucz `anon`) z `.env` (`node --env-file-if-exists=.env`); można je też podać w zmiennych środowiskowych. Bez nich skrypt kończy się błędem, zanim wykona jakikolwiek krok. Każde uruchomienie zakłada w bazie dwa konta `smoke-*@example.com` i profil „Anna Smoke”.
 
 > **Note:** this script exists primarily to guard the development of the starter itself — it is a fast sanity check that dependency upgrades did not break the build, the Cloudflare adapter or the Supabase auth flow. It is **not** a substitute for a real test suite. Once you build your own product on top of this starter, add proper tests (unit, integration, end-to-end) suited to your application.
 

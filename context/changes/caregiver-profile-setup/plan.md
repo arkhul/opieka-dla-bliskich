@@ -505,29 +505,29 @@ Odczyt własnego profilu to jedno zapytanie z osadzeniami plus jedno RPC; zapis 
 
 #### Automated
 
-- [x] 3.1 Lint przechodzi: `npm run lint`
-- [x] 3.2 Typy przechodzą: `npx astro check`
-- [x] 3.3 Build przechodzi: `npm run build`
-- [x] 3.4 Smoke przechodzi na lokalnym Supabase: `npm run smoke`
+- [x] 3.1 Lint przechodzi: `npm run lint` — e998f40
+- [x] 3.2 Typy przechodzą: `npx astro check` — e998f40
+- [x] 3.3 Build przechodzi: `npm run build` — e998f40
+- [x] 3.4 Smoke przechodzi na lokalnym Supabase: `npm run smoke` — e998f40
 
 #### Manual
 
-- [x] 3.5 Rejestracja po polsku, wymagana rola, polskie błędy serwera
-- [x] 3.6 Opiekun po rejestracji na `/profil/edycja`, koordynator na `/`
-- [x] 3.7 Topbar pokazuje „Mój profil” tylko opiekunowi
+- [x] 3.5 Rejestracja po polsku, wymagana rola, polskie błędy serwera — e998f40
+- [x] 3.6 Opiekun po rejestracji na `/profil/edycja`, koordynator na `/` — e998f40
+- [x] 3.7 Topbar pokazuje „Mój profil” tylko opiekunowi — e998f40
 
 ### Phase 4: API profilu
 
 #### Automated
 
-- [ ] 4.1 Lint przechodzi: `npm run lint`
-- [ ] 4.2 Typy przechodzą: `npx astro check`
-- [ ] 4.3 Build przechodzi: `npm run build`
-- [ ] 4.4 Smoke z krokami profilu i RLS przechodzi: `npm run smoke`
+- [x] 4.1 Lint przechodzi: `npm run lint`
+- [x] 4.2 Typy przechodzą: `npx astro check`
+- [x] 4.3 Build przechodzi: `npm run build`
+- [x] 4.4 Smoke z krokami profilu i RLS przechodzi: `npm run smoke`
 
 #### Manual
 
-- [ ] 4.5 Wycofana gmina: `PUT` zwraca 400 z kodem gminy, `GET` pokazuje `active: false` i brak `gminas`
+- [x] 4.5 Wycofana gmina: `PUT` zwraca 400 z kodem gminy, `GET` pokazuje `active: false` i brak `gminas`
 
 ### Phase 5: Strony profilu
 
