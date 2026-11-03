@@ -61,9 +61,14 @@ const steps = [
   ["home renders", () => request("/"), { status: 200 }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   [
-    "signup creates account",
+    "signup rejects missing role",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/auth/confirm-email" },
+    { status: 302, location: "/auth/signup?error=" },
+  ],
+  [
+    "signup creates caregiver account",
+    () => request("/api/auth/signup", { method: "POST", form: { email, password, role: "caregiver" } }),
+    { status: 302, location: "/profil/edycja" },
   ],
   [
     "signin rejects wrong password",
@@ -71,9 +76,9 @@ const steps = [
     { status: 302, location: "/auth/signin?error=" },
   ],
   [
-    "signin accepts correct password",
+    "signin sends caregiver to profile",
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
-    { status: 302, location: "/" },
+    { status: 302, location: "/profil" },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],

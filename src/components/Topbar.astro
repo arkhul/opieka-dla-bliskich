@@ -1,5 +1,21 @@
 ---
+import { getAccountRole } from "@/lib/services/account.service";
+import { createClient } from "@/lib/supabase";
+import type { AccountRole } from "@/types";
+
 const { user } = Astro.locals;
+
+// Missing Supabase config or a failed role read behave like "no role": the generic dashboard link.
+let role: AccountRole | null = null;
+if (user) {
+  const supabase = createClient(Astro.request.headers, Astro.cookies);
+  if (supabase) {
+    role = await getAccountRole(supabase, user.id).catch(() => null);
+  }
+}
+
+const accountLink =
+  role === "caregiver" ? { href: "/profil", label: "Mój profil" } : { href: "/dashboard", label: "Panel" };
 ---
 
 <div class="mb-4 flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm text-white/80">
@@ -7,25 +23,25 @@ const { user } = Astro.locals;
     <>
       <span class="text-blue-100/70">{user.email}</span>
       <div class="flex items-center gap-3">
-        <a href="/dashboard" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Dashboard
+        <a href={accountLink.href} class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
+          {accountLink.label}
         </a>
         <form method="POST" action="/api/auth/signout">
           <button type="submit" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-            Sign out
+            Wyloguj się
           </button>
         </form>
       </div>
     </>
   ) : (
     <>
-      <span class="text-blue-100/70">Not signed in</span>
+      <span class="text-blue-100/70">Nie zalogowano</span>
       <div class="flex gap-3">
         <a href="/auth/signin" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Sign in
+          Zaloguj się
         </a>
         <a href="/auth/signup" class="text-purple-300 transition-colors hover:text-purple-100 hover:underline">
-          Sign up
+          Załóż konto
         </a>
       </div>
     </>

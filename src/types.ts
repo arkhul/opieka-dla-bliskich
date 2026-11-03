@@ -15,3 +15,5 @@ export interface GminaDto {
   wojewodztwo: string;
   label: string;
 }
+
+export type AccountRole = "caregiver" | "coordinator";

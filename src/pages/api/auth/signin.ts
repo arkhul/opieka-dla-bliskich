@@ -1,4 +1,6 @@
 import type { APIRoute } from "astro";
+import { toPolishAuthError } from "@/lib/auth-errors";
+import { getAccountRole } from "@/lib/services/account.service";
 import { createClient } from "@/lib/supabase";
 
 export const POST: APIRoute = async (context) => {
@@ -8,13 +10,16 @@ export const POST: APIRoute = async (context) => {
 
   const supabase = createClient(context.request.headers, context.cookies);
   if (!supabase) {
-    return context.redirect(`/auth/signin?error=${encodeURIComponent("Supabase is not configured")}`);
+    return context.redirect(`/auth/signin?error=${encodeURIComponent("Supabase nie jest skonfigurowany.")}`);
   }
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
   if (error) {
-    return context.redirect(`/auth/signin?error=${encodeURIComponent(error.message)}`);
+    return context.redirect(`/auth/signin?error=${encodeURIComponent(toPolishAuthError(error.message))}`);
   }
 
-  return context.redirect("/");
+  // The session is valid even if the role cannot be read; fall back to the home page then.
+  const role = await getAccountRole(supabase, data.user.id).catch(() => null);
+
+  return context.redirect(role === "caregiver" ? "/profil" : "/");
 };

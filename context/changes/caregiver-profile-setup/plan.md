@@ -494,27 +494,27 @@ Odczyt własnego profilu to jedno zapytanie z osadzeniami plus jedno RPC; zapis 
 
 #### Automated
 
-- [x] 2.1 Skrypt parsuje się: `node --check scripts/generate-gminas-migration.mjs`
-- [x] 2.2 Lint przechodzi: `npm run lint`
+- [x] 2.1 Skrypt parsuje się: `node --check scripts/generate-gminas-migration.mjs` — 09d9f59
+- [x] 2.2 Lint przechodzi: `npm run lint` — 09d9f59
 
 #### Manual
 
-- [x] 2.3 Scenariusz RODZ 1→3 dla Warszawy przepina opiekuna na `1465013`, także gdy ma już następcę
+- [x] 2.3 Scenariusz RODZ 1→3 dla Warszawy przepina opiekuna na `1465013`, także gdy ma już następcę — 09d9f59
 
 ### Phase 3: Role w rejestracji i logowaniu
 
 #### Automated
 
-- [ ] 3.1 Lint przechodzi: `npm run lint`
-- [ ] 3.2 Typy przechodzą: `npx astro check`
-- [ ] 3.3 Build przechodzi: `npm run build`
-- [ ] 3.4 Smoke przechodzi na lokalnym Supabase: `npm run smoke`
+- [x] 3.1 Lint przechodzi: `npm run lint`
+- [x] 3.2 Typy przechodzą: `npx astro check`
+- [x] 3.3 Build przechodzi: `npm run build`
+- [x] 3.4 Smoke przechodzi na lokalnym Supabase: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 Rejestracja po polsku, wymagana rola, polskie błędy serwera
-- [ ] 3.6 Opiekun po rejestracji na `/profil/edycja`, koordynator na `/`
-- [ ] 3.7 Topbar pokazuje „Mój profil” tylko opiekunowi
+- [x] 3.5 Rejestracja po polsku, wymagana rola, polskie błędy serwera
+- [x] 3.6 Opiekun po rejestracji na `/profil/edycja`, koordynator na `/`
+- [x] 3.7 Topbar pokazuje „Mój profil” tylko opiekunowi
 
 ### Phase 4: API profilu
 
