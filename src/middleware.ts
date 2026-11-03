@@ -5,6 +5,20 @@ import type { AccountRole } from "@/types";
 
 const PROTECTED_ROUTES = ["/dashboard", "/profil"];
 
+// The app lives on hosts search engines may index (*.workers.dev, preview URLs), and it serves caregiver
+// profiles and contact data: keep every response out of search results until indexing is a deliberate decision.
+function withNoindex(response: Response): Response {
+  try {
+    response.headers.set("X-Robots-Tag", "noindex");
+    return response;
+  } catch {
+    // Immutable headers (e.g. a proxied fetch response): clone the response to get mutable ones.
+    const clone = new Response(response.body, response);
+    clone.headers.set("X-Robots-Tag", "noindex");
+    return clone;
+  }
+}
+
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
 
@@ -26,9 +40,9 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (PROTECTED_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
     if (!context.locals.user) {
-      return context.redirect("/auth/signin");
+      return withNoindex(context.redirect("/auth/signin"));
     }
   }
 
-  return next();
+  return withNoindex(await next());
 });

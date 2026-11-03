@@ -44,7 +44,10 @@ async function readResponse(response) {
   return {
     status: response.status,
     location: response.headers.get("location") ?? "",
+    headers: response.headers,
     json: isJson ? await response.json() : undefined,
+    // Body of non-JSON responses (HTML pages); empty for JSON.
+    text: isJson ? "" : await response.text(),
   };
 }
 
@@ -86,6 +89,10 @@ const searchCaregivers = (args) => supabase("/rest/v1/rpc/search_caregivers", { 
 const listsCaregiver = (json) => Array.isArray(json) && json.some((row) => row.user_id === caregiverId);
 const hidesCaregiver = (json) => Array.isArray(json) && !json.some((row) => row.user_id === caregiverId);
 const CONTACT_KEYS = ["phone", "email", "caregiver_contacts"];
+const hasNoindex = (headers) => (headers.get("x-robots-tag") ?? "").includes("noindex");
+
+// The 13 catalogue slugs (also checked by "services dictionary lists 13 services"), filled by that step.
+let allServiceSlugs = [];
 
 const completeProfile = {
   displayName: "Anna Smoke",
@@ -100,7 +107,11 @@ const steps = [
   // Dictionaries first: they must work for an anonymous user (no session cookie yet).
   [
     "services dictionary lists 13 services",
-    () => request("/api/dictionaries/services"),
+    async () => {
+      const result = await request("/api/dictionaries/services");
+      allServiceSlugs = (result.json?.services ?? []).map((service) => service.slug);
+      return result;
+    },
     { status: 200, body: (json) => json.services?.length === 13 && json.services[0]?.slug === "towarzystwo" },
   ],
   [
@@ -114,7 +125,7 @@ const steps = [
     { status: 200, body: (json) => json.gminas?.[0]?.teryt === "1465011" },
   ],
   ["gminas search rejects too short query", () => request("/api/dictionaries/gminas?q=a"), { status: 400 }],
-  ["home renders", () => request("/"), { status: 200 }],
+  ["home renders", () => request("/"), { status: 200, headers: hasNoindex }],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   [
     "signup rejects missing role",
@@ -273,6 +284,40 @@ const steps = [
     { status: 200, body: (json) => hasOneRow(json) && Number(json[0].total_count) >= 2 },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
+  // The public caregiver list, as anonymous user (the session was just cleared).
+  [
+    "caregiver list renders for anonymous user",
+    () => request("/opiekunowie?gmina=1465011"),
+    {
+      status: 200,
+      headers: hasNoindex,
+      html: (text) =>
+        text.includes("Anna Smoke") &&
+        ["600 100 200", "600100200", "+48600100200", completeProfile.email, email].every(
+          (secret) => !text.includes(secret),
+        ),
+    },
+  ],
+  [
+    "caregiver list shows relax hints when nothing matches",
+    () => request(`/opiekunowie?gmina=1465011${allServiceSlugs.map((slug) => `&usluga=${slug}`).join("")}`),
+    { status: 200, html: (text) => text.includes("Usuń filtr usług") },
+  ],
+  [
+    "caregiver list ignores malformed filters",
+    () => request("/opiekunowie?gmina=abc&usluga=nieznana&strona=-1"),
+    { status: 200 },
+  ],
+  [
+    "caregiver list reports unknown gmina",
+    () => request("/opiekunowie?gmina=9999991"),
+    { status: 200, html: (text) => text.includes("nie istnieje lub została wycofana") },
+  ],
+  [
+    "caregiver list reports page out of range",
+    () => request("/opiekunowie?gmina=1465011&strona=999"),
+    { status: 200, html: (text) => text.includes("Nie ma takiej strony wyników") },
+  ],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profile API requires a session", () => request("/api/caregiver/profile"), { status: 401 }],
   ["profile page redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
@@ -332,12 +377,19 @@ for (const [name, run, expected] of steps) {
     actual.status === expected.status &&
     (expected.location === undefined ||
       (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
-    (expected.body === undefined || (actual.json !== undefined && expected.body(actual.json)));
+    (expected.body === undefined || (actual.json !== undefined && expected.body(actual.json))) &&
+    (expected.html === undefined || expected.html(actual.text)) &&
+    (expected.headers === undefined || expected.headers(actual.headers));
   console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
   if (!ok) {
     failed++;
-    console.log(`      expected ${expected.status} ${expected.location ?? ""}${expected.body ? " + body check" : ""}`);
+    console.log(
+      `      expected ${expected.status} ${expected.location ?? ""}${expected.body ? " + body check" : ""}` +
+        `${expected.html ? " + html check" : ""}${expected.headers ? " + headers check" : ""}`,
+    );
     if (expected.body) console.log(`      body ${JSON.stringify(actual.json)?.slice(0, 300)}`);
+    if (expected.html) console.log(`      html ${actual.text.slice(0, 300)}`);
+    if (expected.headers) console.log(`      x-robots-tag ${actual.headers.get("x-robots-tag")}`);
   }
 }
 

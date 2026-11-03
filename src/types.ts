@@ -43,3 +43,20 @@ export interface SaveCaregiverProfileCommand {
   gminas: string[];
   services: string[];
 }
+
+// A caregiver as shown on public pages (the search list). It has no contact fields and must never get any:
+// phone, e-mail and address are served only on protected routes.
+// services follow the catalogue sort_order; gminas are the active ones, sorted by name.
+export interface PublicCaregiverDto {
+  id: string;
+  displayName: string;
+  description: string | null;
+  services: ServiceDto[];
+  gminas: GminaDto[];
+}
+
+// Filters of the public caregiver list: one gmina (TERC) and the services a profile must all offer.
+export interface CaregiverSearchFilter {
+  teryt: string | null;
+  services: string[];
+}

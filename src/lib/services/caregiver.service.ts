@@ -2,8 +2,10 @@ import type { PostgrestSingleResponse, SupabaseClient } from "@supabase/supabase
 import { formatGminaLabel } from "@/lib/gmina";
 import type {
   CaregiverMissingItem,
+  CaregiverSearchFilter,
   GminaKind,
   OwnCaregiverProfileDto,
+  PublicCaregiverDto,
   SaveCaregiverProfileCommand,
   ServiceDto,
 } from "@/types";
@@ -139,4 +141,69 @@ export async function saveOwnProfile(supabase: SupabaseClient, cmd: SaveCaregive
     }
     throw new Error(`Failed to save caregiver profile: ${error.message}`);
   }
+}
+
+export const CAREGIVER_PAGE_SIZE = 20;
+
+// Row of search_caregivers(): public columns only. services/gminas are jsonb arrays built in SQL.
+interface SearchRow {
+  user_id: string;
+  display_name: string;
+  description: string | null;
+  services: ServiceDto[];
+  gminas: Omit<GminaRow, "active">[];
+  total_count: number | string;
+}
+
+async function runSearch(supabase: SupabaseClient, filter: CaregiverSearchFilter, limit: number, offset: number) {
+  // Without generated DB types the rpc result is untyped; the filter semantics live in SQL.
+  const { data, error } = (await supabase.rpc("search_caregivers", {
+    p_teryt: filter.teryt,
+    p_services: filter.services,
+    p_limit: limit,
+    p_offset: offset,
+  })) as PostgrestSingleResponse<SearchRow[]>;
+
+  if (error) {
+    throw new Error(`Failed to search caregivers: ${error.message}`);
+  }
+
+  return data;
+}
+
+// Number of complete profiles matching the filter (the same RPC as the list, one row).
+export async function countCaregivers(supabase: SupabaseClient, filter: CaregiverSearchFilter): Promise<number> {
+  const rows = await runSearch(supabase, filter, 1, 0);
+  return rows.length > 0 ? Number(rows[0].total_count) : 0;
+}
+
+// One page of the public caregiver list. No rows on page 1 means no matches; no rows on a later page
+// means the page is out of range, so the real total is counted for the caller to tell the two apart.
+export async function searchCaregivers(
+  supabase: SupabaseClient,
+  filter: CaregiverSearchFilter,
+  page: number,
+): Promise<{ caregivers: PublicCaregiverDto[]; total: number }> {
+  const rows = await runSearch(supabase, filter, CAREGIVER_PAGE_SIZE, (page - 1) * CAREGIVER_PAGE_SIZE);
+
+  if (rows.length === 0) {
+    return { caregivers: [], total: page > 1 ? await countCaregivers(supabase, filter) : 0 };
+  }
+
+  const caregivers = rows.map((row) => ({
+    id: row.user_id,
+    displayName: row.display_name,
+    description: row.description,
+    services: row.services.map(({ slug, label }) => ({ slug, label })),
+    gminas: row.gminas.map(({ teryt, name, kind, powiat, wojewodztwo }) => ({
+      teryt,
+      name,
+      kind,
+      powiat,
+      wojewodztwo,
+      label: formatGminaLabel({ name, kind, powiat, wojewodztwo }),
+    })),
+  }));
+
+  return { caregivers, total: Number(rows[0].total_count) };
 }
