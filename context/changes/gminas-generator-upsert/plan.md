@@ -268,35 +268,35 @@ Migracja schematu jest addytywna (nowe kolumny z wartością domyślną, `create
 
 #### Automated
 
-- [x] 1.1 `npm run lint` przechodzi
-- [x] 1.2 `npx astro check` przechodzi bez błędów
-- [x] 1.3 `npm run build` przechodzi
-- [x] 1.4 CI job `smoke` przechodzi (migracje od zera, w tym nowa, i kroki wyszukiwarki gmin)
+- [x] 1.1 `npm run lint` przechodzi — c94b429
+- [x] 1.2 `npx astro check` przechodzi bez błędów — c94b429
+- [x] 1.3 `npm run build` przechodzi — c94b429
+- [x] 1.4 CI job `smoke` przechodzi (migracje od zera, w tym nowa, i kroki wyszukiwarki gmin) — c94b429
 
 #### Manual
 
-- [x] 1.5 `npx supabase db reset` lokalnie przechodzi, a liczba aktywnych gmin wynosi 2479
-- [x] 1.6 Lokalny `npm run smoke` przechodzi
-- [x] 1.7 Check odrzuca aktywną gminę z następcą, a wycofana gmina znika z wyszukiwarki
+- [x] 1.5 `npx supabase db reset` lokalnie przechodzi, a liczba aktywnych gmin wynosi 2479 — c94b429
+- [x] 1.6 Lokalny `npm run smoke` przechodzi — c94b429
+- [x] 1.7 Check odrzuca aktywną gminę z następcą, a wycofana gmina znika z wyszukiwarki — c94b429
 
 ### Phase 2: Generator — tryb sync
 
 #### Automated
 
-- [ ] 2.1 `npm run lint` przechodzi
-- [ ] 2.2 Generator bez argumentów kończy się kodem 1 i komunikatem użycia
-- [ ] 2.3 Generator z nazwą pliku bez znacznika czasu kończy się kodem 1
-- [ ] 2.4 Generator z `--max-retired abc` kończy się kodem 1
-- [ ] 2.5 CI job `smoke` przechodzi
+- [x] 2.1 `npm run lint` przechodzi
+- [x] 2.2 Generator bez argumentów kończy się kodem 1 i komunikatem użycia
+- [x] 2.3 Generator z nazwą pliku bez znacznika czasu kończy się kodem 1
+- [x] 2.4 Generator z `--max-retired abc` kończy się kodem 1
+- [x] 2.5 CI job `smoke` przechodzi
 
 #### Manual
 
-- [ ] 2.6 Scenariusz 1 (no-op) — migracja stosuje się na zapełnionej bazie, nic nie wycofane
-- [ ] 2.7 Scenariusz 2 (zmiana RODZ) — `0201022` wycofana z następcą `0201023`, wyszukiwarka pokazuje tylko nową
-- [ ] 2.8 Scenariusz 3 (próg) — migracja przerwana, tabela bez zmian, nieudana migracja usunięta
-- [ ] 2.9 Scenariusz 4 (reaktywacja) — `0201022` znów aktywna, `0201023` wycofana z następcą `0201022`
-- [ ] 2.10 Scenariusz 5 (starszy plik) — generator odmawia przy wcześniejszym `STAN_NA`
-- [ ] 2.11 Nagłówek pokazuje nazwę migracji i tryb; testowe pliki usunięte, `db reset` przechodzi
+- [x] 2.6 Scenariusz 1 (no-op) — migracja stosuje się na zapełnionej bazie, nic nie wycofane
+- [x] 2.7 Scenariusz 2 (zmiana RODZ) — `0201022` wycofana z następcą `0201023`, wyszukiwarka pokazuje tylko nową
+- [x] 2.8 Scenariusz 3 (próg) — migracja przerwana, tabela bez zmian, nieudana migracja usunięta
+- [x] 2.9 Scenariusz 4 (reaktywacja) — `0201022` znów aktywna, `0201023` wycofana z następcą `0201022`
+- [x] 2.10 Scenariusz 5 (starszy plik) — generator odmawia przy wcześniejszym `STAN_NA`
+- [x] 2.11 Nagłówek pokazuje nazwę migracji i tryb; testowe pliki usunięte, `db reset` przechodzi
 
 ### Phase 3: Dokumentacja i przekazanie do S-01
 

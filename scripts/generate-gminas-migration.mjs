@@ -1,9 +1,13 @@
-// Generates the gminas data migration from the official GUS TERYT TERC file (wersja urzędowa, CSV).
-// Zero dependencies on purpose. Re-run with a newer TERC file to pick up administrative changes:
-//   node scripts/generate-gminas-migration.mjs <path-to-TERC.csv> supabase/migrations/<YYYYMMDDHHmmss>_seed_gminas.sql
+// Generates a migration that syncs public.gminas with the official GUS TERYT TERC file (wersja urzędowa, CSV).
+// Zero dependencies on purpose. One mode only (sync), so the same output works on an empty and on a populated table:
+// it upserts every gmina from the file and retires (active = false, never deletes) active gminas missing from it;
+// when only RODZ changed (same WOJ+POW+GMI), the new code is set as replaced_by automatically.
+//   node scripts/generate-gminas-migration.mjs <path-to-TERC.csv> supabase/migrations/<YYYYMMDDHHmmss>_update_gminas.sql [--max-retired N]
+// --max-retired N: the migration aborts without changes if more than N gminas would be retired without a successor
+// (default 30; RODZ changes do not count). Refuses a TERC file whose STAN_NA is older than in existing migrations.
 // Download: eteryt.stat.gov.pl -> "Pobieranie plików" -> TERC, wersja urzędowa, CSV. Do not commit the raw CSV.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { readdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { TextDecoder } from "node:util";
 
@@ -13,6 +17,11 @@ const EXPECTED_WOJEWODZTWA = 16;
 const MIN_GMINAS = 2470;
 const MAX_GMINAS = 2490;
 const BATCH_SIZE = 500;
+const DEFAULT_MAX_RETIRED = 30;
+const MAX_INT = 2147483647; // Postgres integer, used for the threshold in the generated SQL
+const MIGRATION_FILE = /^\d{14}_([a-z0-9_]+)\.sql$/;
+const STAN_NA_LINE = /^-- STAN_NA: (\d{4}-\d{2}-\d{2})$/;
+const USAGE = "usage: node scripts/generate-gminas-migration.mjs <path-to-TERC.csv> <output.sql> [--max-retired N]";
 
 function fail(message) {
   console.error(`ERROR: ${message}`);
@@ -57,10 +66,32 @@ function sqlString(value) {
   return `'${value.replaceAll("'", "''")}'`;
 }
 
-const [inputPath, outputPath] = process.argv.slice(2);
-if (!inputPath || !outputPath || process.argv.length > 4) {
-  fail("usage: node scripts/generate-gminas-migration.mjs <path-to-TERC.csv> <output.sql>");
+// Arguments are checked before the TERC file is read.
+const positional = [];
+let maxRetired = DEFAULT_MAX_RETIRED;
+const args = process.argv.slice(2);
+for (let i = 0; i < args.length; i++) {
+  const arg = args[i];
+  if (arg === "--max-retired") {
+    const value = args[++i];
+    if (value === undefined || !/^\d+$/.test(value) || Number(value) > MAX_INT) {
+      fail(
+        `--max-retired needs a whole number between 0 and ${MAX_INT}, got ${value === undefined ? "nothing" : `"${value}"`}\n${USAGE}`,
+      );
+    }
+    maxRetired = Number(value);
+  } else if (arg.startsWith("-")) fail(`unknown option ${arg}\n${USAGE}`);
+  else positional.push(arg);
 }
+if (positional.length !== 2) fail(USAGE);
+const [inputPath, outputPath] = positional;
+
+const outputFile = path.basename(outputPath);
+const migrationMatch = MIGRATION_FILE.exec(outputFile);
+if (!migrationMatch) {
+  fail(`output file name "${outputFile}" must look like <YYYYMMDDHHmmss>_<name>.sql (lowercase letters, digits, _)`);
+}
+const migrationName = migrationMatch[1];
 
 let text;
 try {
@@ -120,6 +151,7 @@ if (wojewodztwa.size !== EXPECTED_WOJEWODZTWA) {
   fail(`expected ${EXPECTED_WOJEWODZTWA} województwa, found ${wojewodztwa.size}`);
 }
 const seen = new Set();
+const prefixes = new Map(); // WOJ+POW+GMI -> unit; the automatic successor relies on this prefix being unique
 const gminas = units.map((unit) => {
   const powiat = powiaty.get(unit.woj + unit.pow);
   const wojewodztwo = wojewodztwa.get(unit.woj);
@@ -127,6 +159,14 @@ const gminas = units.map((unit) => {
   if (!wojewodztwo) fail(`line ${unit.line}: gmina ${unit.teryt} (${unit.name}) has no województwo row ${unit.woj}`);
   if (seen.has(unit.teryt)) fail(`line ${unit.line}: duplicate teryt ${unit.teryt}`);
   seen.add(unit.teryt);
+  const prefix = unit.teryt.slice(0, 6);
+  const other = prefixes.get(prefix);
+  if (other) {
+    fail(
+      `line ${unit.line}: gmina ${unit.teryt} has the same WOJ+POW+GMI ${prefix} as ${other.teryt} (line ${other.line}); automatic successors need a unique prefix`,
+    );
+  }
+  prefixes.set(prefix, unit);
   return { teryt: unit.teryt, name: unit.name, kind: unit.kind, powiat, wojewodztwo };
 });
 if (gminas.length < MIN_GMINAS || gminas.length > MAX_GMINAS) {
@@ -135,29 +175,154 @@ if (gminas.length < MIN_GMINAS || gminas.length > MAX_GMINAS) {
 
 gminas.sort((a, b) => (a.teryt < b.teryt ? -1 : a.teryt > b.teryt ? 1 : 0));
 const stanNa = [...stanNaValues].sort().at(-1);
+
+// An older TERC file would silently undo later changes, so refuse it. Assumes the migrations
+// next to the output file match the production database (no database access here).
+const outputDir = path.dirname(path.resolve(outputPath));
+let migrationFiles;
+try {
+  migrationFiles = readdirSync(outputDir).filter((file) => file.endsWith(".sql"));
+} catch (error) {
+  fail(`cannot read the output directory ${outputDir}: ${error.message}`);
+}
+let latestStanNa = null;
+let latestStanNaFile = null;
+for (const file of migrationFiles) {
+  if (path.resolve(outputDir, file) === path.resolve(outputPath)) continue; // the file being overwritten
+  let content;
+  try {
+    content = readFileSync(path.join(outputDir, file), "utf8");
+  } catch (error) {
+    fail(`cannot read ${path.join(outputDir, file)}: ${error.message}`);
+  }
+  for (const line of content.split(/\r?\n/)) {
+    const value = STAN_NA_LINE.exec(line)?.[1];
+    if (value && (latestStanNa === null || value > latestStanNa)) {
+      latestStanNa = value;
+      latestStanNaFile = file;
+    }
+  }
+}
+if (latestStanNa !== null && stanNa < latestStanNa) {
+  fail(
+    `STAN_NA of the TERC file (${stanNa}) is older than STAN_NA ${latestStanNa} in ${latestStanNaFile}; use a TERC file at least as recent`,
+  );
+}
+
 const outputRef = path.relative(process.cwd(), outputPath);
 const outputShown =
   outputRef && !outputRef.startsWith("..") && !path.isAbsolute(outputRef)
     ? outputRef.split(path.sep).join("/")
     : path.basename(outputPath);
+const maxRetiredArg = maxRetired === DEFAULT_MAX_RETIRED ? "" : ` --max-retired ${maxRetired}`;
 
 const batches = [];
 for (let i = 0; i < gminas.length; i += BATCH_SIZE) {
   const values = gminas
     .slice(i, i + BATCH_SIZE)
     .map((g) => `  (${[g.teryt, g.name, g.kind, g.powiat, g.wojewodztwo].map(sqlString).join(", ")})`);
-  batches.push(`insert into public.gminas (teryt, name, kind, powiat, wojewodztwo) values\n${values.join(",\n")};\n`);
+  batches.push(`insert into gminas_terc (teryt, name, kind, powiat, wojewodztwo) values\n${values.join(",\n")};\n`);
 }
 
+// Order matters: the upsert runs first, so every successor exists (FK) before replaced_by points at it,
+// and reactivated gminas get active = true and replaced_by = null in one statement (check constraint).
+// The successor of a retired gmina is the TERC code with the same WOJ+POW+GMI and a different RODZ.
+const sync = `-- ---------------------------------------------------------------------------
+-- Upsert: add new gminas, update existing ones, reactivate gminas back in TERC.
+-- ---------------------------------------------------------------------------
+insert into public.gminas (teryt, name, kind, powiat, wojewodztwo)
+select teryt, name, kind, powiat, wojewodztwo
+from gminas_terc
+on conflict (teryt) do update set
+  name = excluded.name,
+  kind = excluded.kind,
+  powiat = excluded.powiat,
+  wojewodztwo = excluded.wojewodztwo,
+  active = true,
+  replaced_by = null;
+
+-- ---------------------------------------------------------------------------
+-- Retire active gminas missing from TERC (rows are never deleted).
+-- Aborts the whole migration if more than max_retired would be retired without a successor.
+-- ---------------------------------------------------------------------------
+do $$
+declare
+  max_retired constant integer := ${maxRetired};
+  retired_codes text[];
+  successor_codes text[];
+  orphan_count integer;
+  orphan_list text;
+  replaced_list text;
+  shortened_count integer;
+begin
+  select
+    coalesce(array_agg(g.teryt order by g.teryt), '{}'),
+    coalesce(array_agg((
+      select t.teryt
+      from gminas_terc as t
+      where left(t.teryt, 6) = left(g.teryt, 6)
+        and t.teryt <> g.teryt
+    ) order by g.teryt), '{}')
+  into retired_codes, successor_codes
+  from public.gminas as g
+  where g.active
+    and not exists (select 1 from gminas_terc as t where t.teryt = g.teryt);
+
+  select count(*), string_agg(r.old_teryt, ', ' order by r.old_teryt)
+  into orphan_count, orphan_list
+  from unnest(retired_codes, successor_codes) as r (old_teryt, new_teryt)
+  where r.new_teryt is null;
+
+  if orphan_count > max_retired then
+    raise exception 'gminas sync aborted: % gminas would be retired without a successor (max %): %. If this is a real administrative reform, regenerate the migration with --max-retired N.',
+      orphan_count, max_retired, orphan_list;
+  end if;
+
+  update public.gminas as g
+  set active = false,
+      replaced_by = r.new_teryt
+  from unnest(retired_codes, successor_codes) as r (old_teryt, new_teryt)
+  where g.teryt = r.old_teryt;
+
+  -- Shorten chains: gminas retired earlier that pointed at a gmina retired now get its successor.
+  update public.gminas as g
+  set replaced_by = r.new_teryt
+  from unnest(retired_codes, successor_codes) as r (old_teryt, new_teryt)
+  where not g.active
+    and g.replaced_by = r.old_teryt
+    and r.new_teryt is not null;
+  get diagnostics shortened_count = row_count;
+
+  if cardinality(retired_codes) = 0 then
+    raise notice 'gminas sync: no gminas retired';
+  else
+    select string_agg(r.old_teryt || ' -> ' || r.new_teryt, ', ' order by r.old_teryt)
+    into replaced_list
+    from unnest(retired_codes, successor_codes) as r (old_teryt, new_teryt)
+    where r.new_teryt is not null;
+
+    raise notice 'gminas sync: retired % gminas; with successor: %; without successor: %; shortened successor chains: %',
+      cardinality(retired_codes), coalesce(replaced_list, 'none'), coalesce(orphan_list, 'none'), shortened_count;
+  end if;
+end;
+$$;
+
+drop table gminas_terc;
+`;
+
 const sql = [
-  "-- Migration: seed_gminas",
+  `-- Migration: ${migrationName}`,
   "-- GENERATED FILE - do not edit by hand. Regenerate from a newer TERC file instead.",
   "-- Source: GUS TERYT, TERC (wersja urzędowa, CSV), eteryt.stat.gov.pl -> Pobieranie plików",
   `-- STAN_NA: ${stanNa}`,
-  `-- Generated with: node scripts/generate-gminas-migration.mjs ${path.basename(inputPath)} ${outputShown}`,
+  `-- Generated with: node scripts/generate-gminas-migration.mjs ${path.basename(inputPath)} ${outputShown}${maxRetiredArg}`,
   `-- Rows: ${gminas.length} gminas (TERC RODZ 1 miejska, 2 wiejska, 3 miejsko-wiejska)`,
+  `-- Mode: sync (upsert from TERC, retire gminas missing from TERC; max retired without successor: ${maxRetired})`,
+  "",
+  "create temporary table gminas_terc (teryt text primary key, name text not null, kind text not null, powiat text not null, wojewodztwo text not null);",
   "",
   ...batches,
+  sync,
 ].join("\n");
 
 try {
@@ -172,4 +337,6 @@ const byKind = Object.values(KINDS)
 console.log(`STAN_NA: ${stanNa}`);
 if (stanNaValues.size > 1) console.log(`  (file has ${stanNaValues.size} STAN_NA values; using the latest)`);
 console.log(`gminas: ${gminas.length} (${byKind})`);
+console.log(`migration: ${migrationName}`);
+console.log(`max retired: ${maxRetired}`);
 console.log(`written: ${outputPath}`);
