@@ -187,6 +187,11 @@ const steps = [
     { status: 302, location: "/profil", exact: true },
   ],
   [
+    "signin ignores external next (dot segments)",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "/.//evil.example" } }),
+    { status: 302, location: "/profil", exact: true },
+  ],
+  [
     "signin ignores external next (absolute URL)",
     () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "https://evil.example" } }),
     { status: 302, location: "/profil", exact: true },

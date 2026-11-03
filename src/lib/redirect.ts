@@ -29,7 +29,11 @@ export function safeNextPath(value: unknown): string | null {
   const { pathname, search } = url;
   if (FORBIDDEN_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`))) return null;
 
-  return pathname + search;
+  const target = pathname + search;
+  // Normalization collapses dot segments, so "/.//host" becomes "//host" (protocol-relative): check the result too.
+  if (target.startsWith("//") || target.startsWith("/\\")) return null;
+
+  return target;
 }
 
 /** Appends an already validated `next` (encoded) to a path, keeping its existing query (e.g. `error`). */
