@@ -1,0 +1,22 @@
+# Team AI rules (@twoj-zespol/ai-toolkit)
+
+Starter rules shipped as `rules/CLAUDE.md` in the team toolkit package. The
+installer copies this file into the consumer's `CLAUDE.md` between the package
+sentinel markers. Do not put the markers in this file, and do not edit the
+installed block by hand: change this file, bump the package version and publish.
+
+## Skills from this package
+
+| When | Use |
+|---|---|
+| Reviewing a diff or a PR before merge | `/code-review` |
+
+## Working rules
+
+- Follow the team conventions encoded in `/code-review`; when a rule there
+  conflicts with this repository's own `CLAUDE.md`, the repository wins.
+- Never commit secrets, tokens or `.npmrc` entries with `_authToken`.
+- Keep changes small and reviewable; run the project's tests before proposing a
+  commit.
+- When a team rule looks wrong for this repository, say so and propose a change
+  to the toolkit instead of silently ignoring it.

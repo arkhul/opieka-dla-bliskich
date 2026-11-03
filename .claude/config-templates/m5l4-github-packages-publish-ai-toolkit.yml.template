@@ -1,0 +1,90 @@
+name: Publish AI Toolkit
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+
+      - name: Validate skills
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          dirs=(skills/*/)
+          if [ ${#dirs[@]} -eq 0 ]; then
+            echo "::error::No skills found in skills/"
+            exit 1
+          fi
+          for dir in "${dirs[@]}"; do
+            skill=$(basename "$dir")
+            file="${dir}SKILL.md"
+            if [ ! -f "$file" ]; then
+              echo "::error file=$dir::Missing SKILL.md"
+              exit 1
+            fi
+            if [ "$(head -n 1 "$file")" != "---" ]; then
+              echo "::error file=$file::Missing YAML frontmatter"
+              exit 1
+            fi
+            name=$(sed -n '2,/^---$/s/^name:[[:space:]]*//p' "$file" | head -n 1 | tr -d '"'"'"'')
+            if [ "$name" != "$skill" ]; then
+              echo "::error file=$file::Frontmatter name '$name' does not match directory '$skill'"
+              exit 1
+            fi
+            if ! sed -n '2,/^---$/p' "$file" | grep -q '^description:'; then
+              echo "::error file=$file::Missing description in frontmatter"
+              exit 1
+            fi
+          done
+
+      - run: test -f rules/CLAUDE.md
+      - run: node --check install.js && node --check uninstall.js
+      - run: npm pack --dry-run
+
+  publish:
+    needs: validate
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@twoj-zespol"
+
+      - name: Check if version is already published
+        id: version
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          name=$(node -p "require('./package.json').name")
+          version=$(node -p "require('./package.json').version")
+          if npm view "${name}@${version}" version >/dev/null 2>&1; then
+            echo "${name}@${version} already published, bump version in package.json to release"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - if: steps.version.outputs.skip != 'true'
+        run: npm publish --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
