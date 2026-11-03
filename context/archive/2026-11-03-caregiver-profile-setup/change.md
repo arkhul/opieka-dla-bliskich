@@ -1,10 +1,10 @@
 ---
 change_id: caregiver-profile-setup
 title: Caregiver profile setup
-status: impl_reviewed
+status: archived
 created: 2026-11-03
 updated: 2026-11-03
-archived_at: null
+archived_at: 2026-11-03T17:41:08Z
 ---
 
 ## Notes

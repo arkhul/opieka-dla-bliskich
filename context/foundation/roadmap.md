@@ -42,7 +42,7 @@ Rodzinny koordynator opieki — np. córka organizująca stałą opiekę dla mat
 | ID   | Change ID                      | Outcome (user can …)                                                                  | Prerequisites | PRD refs                                  | Status   |
 | ---- | ------------------------------ | ------------------------------------------------------------------------------------- | ------------- | ----------------------------------------- | -------- |
 | F-01 | gmina-and-service-dictionaries | (foundation) słownik gmin i zamknięty katalog usług są dostępne w aplikacji            | —             | FR-005, FR-006, FR-009, FR-010            | done |
-| S-01 | caregiver-profile-setup        | opiekun zakłada konto i publikuje profil z kontaktem, gminami i usługami               | F-01          | FR-001, FR-003, FR-004, FR-005, FR-006    | in-progress |
+| S-01 | caregiver-profile-setup        | opiekun zakłada konto i publikuje profil z kontaktem, gminami i usługami               | F-01          | FR-001, FR-003, FR-004, FR-005, FR-006    | done |
 | S-02 | public-caregiver-search        | każdy bez logowania przegląda listę opiekunów i filtruje ją po gminie i usłudze        | F-01, S-01    | US-01, FR-008, FR-009, FR-010             | proposed |
 | S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | proposed |
 | S-04 | caregiver-availability-filter  | opiekun ustawia dostępność (dni tygodnia × pory dnia), a koordynator po niej filtruje  | S-01, S-02    | FR-007, FR-011                            | proposed |
@@ -102,7 +102,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
   - Czy rejestracja wymaga potwierdzenia e-maila (PRD Open Question 1)? Planowanie może ruszyć na obecnej konfiguracji bez potwierdzenia. — Owner: user. Block: no.
 - **Risk:** Tu po raz pierwszy zapisujemy dane kontaktowe, więc już w tym wycinku muszą być oddzielone od publicznej części profilu regułami dostępu w bazie — dokładanie tego później oznacza migrację danych, które już wyciekały do publicznych zapytań.
 - **Constraints:** (z gminas-generator-upsert) FK z profili do `public.gminas(teryt)` z `on delete restrict`; w formularzu i walidacji wybór tylko gmin `active`; generator gmin musi dostać krok przepinający profile z kodu wycofanego na `replaced_by` wyłącznie na **aktywnego** następcę (np. `update … set teryt = n.teryt from public.gminas g join public.gminas n on n.teryt = g.replaced_by and n.active where … and not g.active`), bo `replaced_by` może wskazywać gminę później wycofaną bez następcy; profile wskazujące wycofaną gminę bez aktywnego następcy pozostają do ręcznego rozstrzygnięcia.
-- **Status:** in-progress
+- **Status:** done
 
 ### S-02: Publiczna lista opiekunów z filtrami gminy i usługi
 
@@ -210,3 +210,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 (Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived.)
 
 - **F-01: (foundation) słownik gmin i zamknięty katalog rodzajów usług są dostępne w aplikacji jako wspólne listy wyboru — tylko dane referencyjne, bez tabel profili.** — Archived 2026-11-03 → `context/archive/2026-09-24-gmina-and-service-dictionaries/`. Lesson: —.
+- **S-01: opiekun zakłada konto, loguje się, uzupełnia dane kontaktowe, obsługiwane gminy i oferowane usługi, a następnie widzi swój profil.** — Archived 2026-11-03 → `context/archive/2026-11-03-caregiver-profile-setup/`. Lesson: —.
