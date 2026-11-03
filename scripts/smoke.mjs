@@ -125,7 +125,11 @@ const steps = [
     { status: 200, body: (json) => json.gminas?.[0]?.teryt === "1465011" },
   ],
   ["gminas search rejects too short query", () => request("/api/dictionaries/gminas?q=a"), { status: 400 }],
-  ["home renders", () => request("/"), { status: 200, headers: hasNoindex }],
+  [
+    "home renders",
+    () => request("/"),
+    { status: 200, headers: hasNoindex, html: (text) => text.includes('href="/opiekunowie"') },
+  ],
   ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   [
     "signup rejects missing role",

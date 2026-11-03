@@ -327,30 +327,30 @@ Migracja tylko dodaje funkcję — bez zmian danych i bez wpływu na istniejące
 
 #### Automated
 
-- [x] 2.1 Lint przechodzi: `npm run lint`
-- [x] 2.2 Typy przechodzą: `npx astro check`
-- [x] 2.3 Build przechodzi: `npm run build`
-- [x] 2.4 Smoke przechodzi z krokami strony: `npm run smoke`
+- [x] 2.1 Lint przechodzi: `npm run lint` — 6d01b65
+- [x] 2.2 Typy przechodzą: `npx astro check` — 6d01b65
+- [x] 2.3 Build przechodzi: `npm run build` — 6d01b65
+- [x] 2.4 Smoke przechodzi z krokami strony: `npm run smoke` — 6d01b65
 
 #### Manual
 
-- [x] 2.5 Jako anonim na `/opiekunowie` wybór gminy i dwóch usług, potem zdjęcie chipem jednej usługi — gmina i druga usługa zostają, a wynik się zgadza
-- [x] 2.6 Pusty wynik pokazuje wyjaśnienie i linki z liczbami; kliknięcie linku daje dokładnie podaną liczbę wyników
-- [x] 2.7 Profil opiekuna bez telefonu albo bez gminy nie pojawia się na liście, a po uzupełnieniu się pojawia
-- [x] 2.8 Przy ponad 20 kompletnych profilach (np. po kilku przebiegach smoke) działa przejście na stronę 2 z zachowaniem filtrów
-- [x] 2.9 Na 375 px formularz, chipy, karty i stronicowanie są używalne bez poziomego przewijania; `GminaPicker` w `/profil/edycja` działa jak wcześniej
-- [x] 2.10 Źródło strony i zakładka sieci nie zawierają telefonu ani e-maila żadnego opiekuna
+- [x] 2.5 Jako anonim na `/opiekunowie` wybór gminy i dwóch usług, potem zdjęcie chipem jednej usługi — gmina i druga usługa zostają, a wynik się zgadza — 6d01b65
+- [x] 2.6 Pusty wynik pokazuje wyjaśnienie i linki z liczbami; kliknięcie linku daje dokładnie podaną liczbę wyników — 6d01b65
+- [x] 2.7 Profil opiekuna bez telefonu albo bez gminy nie pojawia się na liście, a po uzupełnieniu się pojawia — 6d01b65
+- [x] 2.8 Przy ponad 20 kompletnych profilach (np. po kilku przebiegach smoke) działa przejście na stronę 2 z zachowaniem filtrów — 6d01b65
+- [x] 2.9 Na 375 px formularz, chipy, karty i stronicowanie są używalne bez poziomego przewijania; `GminaPicker` w `/profil/edycja` działa jak wcześniej — 6d01b65
+- [x] 2.10 Źródło strony i zakładka sieci nie zawierają telefonu ani e-maila żadnego opiekuna — 6d01b65
 
 ### Phase 3: Wejścia do listy
 
 #### Automated
 
-- [ ] 3.1 Lint przechodzi: `npm run lint`
-- [ ] 3.2 Typy przechodzą: `npx astro check`
-- [ ] 3.3 Build przechodzi: `npm run build`
-- [ ] 3.4 Smoke przechodzi: `npm run smoke`
+- [x] 3.1 Lint przechodzi: `npm run lint`
+- [x] 3.2 Typy przechodzą: `npx astro check`
+- [x] 3.3 Build przechodzi: `npm run build`
+- [x] 3.4 Smoke przechodzi: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.5 Pełny przepływ anonima: `/` → „Znajdź opiekuna” → filtr gminy i usługi → wyniki, po polsku, na 375 px
-- [ ] 3.6 Topbar pokazuje „Opiekunowie” zalogowanemu opiekunowi, koordynatorowi i anonimowi
+- [x] 3.5 Pełny przepływ anonima: `/` → „Znajdź opiekuna” → filtr gminy i usługi → wyniki, po polsku, na 375 px
+- [x] 3.6 Topbar pokazuje „Opiekunowie” zalogowanemu opiekunowi, koordynatorowi i anonimowi
