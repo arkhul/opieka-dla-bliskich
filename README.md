@@ -139,10 +139,10 @@ The generated migration syncs `public.gminas` with the file and works on a popul
 
 - It updates existing gminas, adds new ones and marks gminas missing from TERC as retired (`active = false`). Rows are never deleted. Retired gminas disappear from the gmina search.
 - When only the gmina type changes (same WOJ+POW+GMI, different RODZ, e.g. a village gets town rights), the new code is set as the successor in `replaced_by` automatically.
-- The generator refuses a TERC file whose `STAN_NA` is older than the one in the existing gmina migrations, so an outdated file cannot undo later changes.
+- The generator refuses a TERC file whose `STAN_NA` is older than the one in the existing gmina migrations, so an outdated file cannot undo later changes. It also refuses an output timestamp that is not later than every existing migration.
 - The migration aborts without changes if it would retire more than 30 gminas without a successor (type changes do not count). For a real large reform, regenerate it with `--max-retired N`.
 
-After applying it, check the retired gminas:
+Before `npx supabase db push`, apply it locally first (`npx supabase migration up`, or `npx supabase db reset` for a clean run) and check the retired gminas:
 
 ```sql
 select teryt, name, replaced_by from public.gminas where not active order by teryt;
