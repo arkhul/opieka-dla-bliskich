@@ -185,7 +185,7 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 
 ## Open Roadmap Questions
 
-1. **Potwierdzanie rejestracji** — czy założenie konta wymaga potwierdzenia adresu e-mail? (PRD Open Question 1) — Owner: user. Block: S-01, S-03 (nie blokuje planowania; domyślnie obecna konfiguracja bez potwierdzenia, której wymaga też `npm run smoke`).
+1. ~~**Potwierdzanie rejestracji**~~ — rozstrzygnięte 2026-11-03: bez potwierdzania w MVP; „Confirm email” wyłączone w produkcyjnym Supabase (PRD Open Question 1). Wariant z potwierdzaniem → `## Parked`.
 2. **Oddzielne środowisko testowe** — wersje preview Workera używają produkcyjnego projektu Supabase (`infrastructure.md` § Risk Register); czy przed testami na preview potrzebny jest osobny projekt Supabase? — Owner: user. Block: roadmap-wide (nie blokuje planowania; do czasu decyzji żadnych zapisów testowych przez preview).
 
 ## Parked
@@ -194,6 +194,7 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 - **Kalendarz rezerwacyjny** — Why parked: PRD §Non-Goals; dostępność jest informacją, nie zobowiązaniem.
 - **Weryfikacja i moderacja opiekunów** — Why parked: PRD §Non-Goals.
 - **Wiadomości wewnątrz portalu** — Why parked: PRD §Non-Goals; kontakt odbywa się poza systemem.
+- **Potwierdzanie e-maila przy rejestracji** — Why parked: decyzja z 2026-11-03 (PRD Open Question 1), przy celu `speed` MVP działa bez potwierdzania. Włączenie wymaga trasy obsługującej link z maila (`exchangeCodeForSession`/`verifyOtp`, dziś brak), zachowania `next` przez link, Site URL i Redirect URLs na domenę Workera oraz własnego SMTP (wbudowana wysyłka Supabase ma limit kilku maili na godzinę). Wraca, gdy pojawi się zbieranie kontaktów z fałszywych kont.
 - **FR-013: profil koordynatora** — Why parked: nice-to-have; przy celu `speed` i ryzyku `time` poza pierwszym kamieniem milowym.
 - **FR-014: opiekun przegląda zgłoszenia koordynatorów** — Why parked: nice-to-have; wraca razem ze zgłoszeniem potrzeby i automatycznym dopasowaniem.
 - **FR-015: powiadomienia o nowym profilu w gminie** — Why parked: nice-to-have; wymaga osobnego workera lub kolejki (`tech-stack.md`).

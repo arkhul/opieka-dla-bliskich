@@ -165,4 +165,4 @@ Osoba niezalogowana widzi listę profili opiekunów i może ją filtrować, ale 
 
 ## Open Questions
 
-1. **Potwierdzanie rejestracji** — czy założenie konta wymaga potwierdzenia adresu e-mail? Owner: użytkownik.
+1. **Potwierdzanie rejestracji** — czy założenie konta wymaga potwierdzenia adresu e-mail? Owner: użytkownik. **Rozstrzygnięte 2026-11-03:** nie — w MVP rejestracja daje sesję od razu (produkcyjny Supabase: „Confirm email” wyłączone), więc koordynator widzi kontakt zaraz po założeniu konta. Potwierdzanie e-maila (obsługa linku, Site URL, własny SMTP) odłożone jako ochrona przed zbieraniem kontaktów z fałszywych kont.
