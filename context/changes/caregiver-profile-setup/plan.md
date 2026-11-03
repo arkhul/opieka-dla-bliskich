@@ -533,14 +533,14 @@ Odczyt własnego profilu to jedno zapytanie z osadzeniami plus jedno RPC; zapis 
 
 #### Automated
 
-- [x] 5.1 Lint przechodzi: `npm run lint`
-- [x] 5.2 Typy przechodzą: `npx astro check`
-- [x] 5.3 Build przechodzi: `npm run build`
-- [x] 5.4 Smoke ze stronami profilu przechodzi: `npm run smoke`
+- [x] 5.1 Lint przechodzi: `npm run lint` — d6991c6
+- [x] 5.2 Typy przechodzą: `npx astro check` — d6991c6
+- [x] 5.3 Build przechodzi: `npm run build` — d6991c6
+- [x] 5.4 Smoke ze stronami profilu przechodzi: `npm run smoke` — d6991c6
 
 #### Manual
 
-- [x] 5.5 Pełny przepływ w przeglądarce od rejestracji do „Profil jest kompletny”
-- [x] 5.6 Autocomplete bez diakrytyków, limit 30 gmin, brak duplikatów
-- [x] 5.7 Formularz i podgląd używalne przy 375 px
-- [x] 5.8 Strony publiczne i API słowników nie zawierają kontaktu opiekuna
+- [x] 5.5 Pełny przepływ w przeglądarce od rejestracji do „Profil jest kompletny” — d6991c6
+- [x] 5.6 Autocomplete bez diakrytyków, limit 30 gmin, brak duplikatów — d6991c6
+- [x] 5.7 Formularz i podgląd używalne przy 375 px — d6991c6
+- [x] 5.8 Strony publiczne i API słowników nie zawierają kontaktu opiekuna — d6991c6
