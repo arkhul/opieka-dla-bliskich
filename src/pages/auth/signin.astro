@@ -1,8 +1,10 @@
 ---
 import Layout from "@/layouts/Layout.astro";
 import SignInForm from "@/components/auth/SignInForm";
+import { safeNextPath, withNext } from "@/lib/redirect";
 
 const error = Astro.url.searchParams.get("error");
+const next = safeNextPath(Astro.url.searchParams.get("next"));
 ---
 
 <Layout title="Logowanie">
@@ -11,10 +13,10 @@ const error = Astro.url.searchParams.get("error");
       <h1 class="mb-6 bg-gradient-to-r from-blue-200 to-purple-200 bg-clip-text text-center text-2xl font-bold text-transparent">
         Zaloguj się
       </h1>
-      <SignInForm serverError={error} client:load />
+      <SignInForm serverError={error} next={next} client:load />
       <p class="mt-4 text-center text-sm text-blue-100/60">
         Nie masz konta?{" "}
-        <a href="/auth/signup" class="text-purple-300 hover:underline">
+        <a href={withNext("/auth/signup", next)} class="text-purple-300 hover:underline">
           Załóż konto
         </a>
       </p>

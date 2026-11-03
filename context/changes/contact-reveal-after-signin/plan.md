@@ -323,28 +323,28 @@ Migracja tylko zmienia politykę i dodaje funkcję — bez zmian danych. Wycofan
 
 #### Automated
 
-- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset`
-- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error`
-- [x] 1.3 Lint przechodzi: `npm run lint`
-- [x] 1.4 Smoke przechodzi z nowymi krokami RLS: `npm run smoke`
+- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset` — 498508b
+- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error` — 498508b
+- [x] 1.3 Lint przechodzi: `npm run lint` — 498508b
+- [x] 1.4 Smoke przechodzi z nowymi krokami RLS: `npm run smoke` — 498508b
 
 #### Manual
 
-- [x] 1.5 W `psql` `select policyname, cmd, roles from pg_policies where tablename = 'caregiver_contacts'` pokazuje dokładnie jedną politykę SELECT (dla `authenticated`), a opiekun nadal zapisuje swój profil na `/profil/edycja` bez błędu
+- [x] 1.5 W `psql` `select policyname, cmd, roles from pg_policies where tablename = 'caregiver_contacts'` pokazuje dokładnie jedną politykę SELECT (dla `authenticated`), a opiekun nadal zapisuje swój profil na `/profil/edycja` bez błędu — 498508b
 
 ### Phase 2: Powrót po logowaniu (`next`)
 
 #### Automated
 
-- [ ] 2.1 Lint przechodzi: `npm run lint`
-- [ ] 2.2 Typy przechodzą: `npx astro check`
-- [ ] 2.3 Build przechodzi: `npm run build`
-- [ ] 2.4 Smoke przechodzi z krokami `next`: `npm run smoke`
+- [x] 2.1 Lint przechodzi: `npm run lint`
+- [x] 2.2 Typy przechodzą: `npx astro check`
+- [x] 2.3 Build przechodzi: `npm run build`
+- [x] 2.4 Smoke przechodzi z krokami `next`: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.5 Jako anonim wejście na `/dashboard` prowadzi do logowania, link „Załóż konto” zachowuje `next`, a po zalogowaniu opiekun wraca na `/dashboard` (nie na domyślny `/profil`)
-- [ ] 2.6 Ręcznie wpisany `/auth/signin?next=https://example.com` po zalogowaniu prowadzi na trasę domyślną, nie na zewnętrzną domenę
+- [x] 2.5 Jako anonim wejście na `/dashboard` prowadzi do logowania, link „Załóż konto” zachowuje `next`, a po zalogowaniu opiekun wraca na `/dashboard` (nie na domyślny `/profil`)
+- [x] 2.6 Ręcznie wpisany `/auth/signin?next=https://example.com` po zalogowaniu prowadzi na trasę domyślną, nie na zewnętrzną domenę
 
 ### Phase 3: Strony profilu i kontaktu
 

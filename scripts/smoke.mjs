@@ -138,7 +138,12 @@ const steps = [
     () => request("/"),
     { status: 200, headers: hasNoindex, html: (text) => text.includes('href="/opiekunowie"') },
   ],
-  ["dashboard redirects anonymous user", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
+  [
+    "dashboard redirects anonymous user",
+    () => request("/dashboard"),
+    // exact: the redirect carries the page the anonymous user came from.
+    { status: 302, location: "/auth/signin?next=%2Fdashboard", exact: true },
+  ],
   [
     "signup rejects missing role",
     () => request("/api/auth/signup", { method: "POST", form: { email, password } }),
@@ -159,6 +164,41 @@ const steps = [
     () => request("/api/auth/signin", { method: "POST", form: { email, password } }),
     // exact: "/profil/edycja" would also start with "/profil".
     { status: 302, location: "/profil", exact: true },
+  ],
+  // The return address ("next"), while the caregiver is signed in: it wins over the role's default page, external
+  // targets are ignored (the default page applies), and a failed sign-in keeps it.
+  [
+    "signin returns to next",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "/dashboard" } }),
+    { status: 302, location: "/dashboard", exact: true },
+  ],
+  [
+    "signin ignores external next (protocol-relative)",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "//evil.example" } }),
+    { status: 302, location: "/profil", exact: true },
+  ],
+  [
+    "signin ignores external next (backslash)",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "/\\evil.example" } }),
+    { status: 302, location: "/profil", exact: true },
+  ],
+  [
+    "signin ignores external next (absolute URL)",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password, next: "https://evil.example" } }),
+    { status: 302, location: "/profil", exact: true },
+  ],
+  [
+    "signin error keeps next",
+    () => request("/api/auth/signin", { method: "POST", form: { email, password: "wrong", next: "/dashboard" } }),
+    { status: 302, location: "/auth/signin?error=", locationIncludes: "next=%2Fdashboard" },
+  ],
+  [
+    "signin page carries next",
+    () => request("/auth/signin?next=%2Fdashboard"),
+    {
+      status: 200,
+      html: (text) => text.includes('name="next"') && text.includes('href="/auth/signup?next=%2Fdashboard"'),
+    },
   ],
   ["dashboard renders for signed-in user", () => request("/dashboard"), { status: 200 }],
   ["profile edit page renders for caregiver", () => request("/profil/edycja"), { status: 200 }],
@@ -455,6 +495,7 @@ for (const [name, run, expected] of steps) {
     actual.status === expected.status &&
     (expected.location === undefined ||
       (expected.exact ? actual.location === expected.location : actual.location.startsWith(expected.location))) &&
+    (expected.locationIncludes === undefined || actual.location.includes(expected.locationIncludes)) &&
     (expected.body === undefined || (actual.json !== undefined && expected.body(actual.json))) &&
     (expected.html === undefined || expected.html(actual.text)) &&
     (expected.headers === undefined || expected.headers(actual.headers));
@@ -462,7 +503,7 @@ for (const [name, run, expected] of steps) {
   if (!ok) {
     failed++;
     console.log(
-      `      expected ${expected.status} ${expected.location ?? ""}${expected.body ? " + body check" : ""}` +
+      `      expected ${expected.status} ${expected.location ?? ""}${expected.locationIncludes ? ` + includes ${expected.locationIncludes}` : ""}${expected.body ? " + body check" : ""}` +
         `${expected.html ? " + html check" : ""}${expected.headers ? " + headers check" : ""}`,
     );
     if (expected.body) console.log(`      body ${JSON.stringify(actual.json)?.slice(0, 300)}`);

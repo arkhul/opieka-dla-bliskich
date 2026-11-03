@@ -1,5 +1,8 @@
 ---
 import Layout from "@/layouts/Layout.astro";
+import { safeNextPath, withNext } from "@/lib/redirect";
+
+const next = safeNextPath(Astro.url.searchParams.get("next"));
 
 const isAutoConfirmed = import.meta.env.DEV;
 
@@ -26,7 +29,7 @@ const content = isAutoConfirmed
         {content.heading}
       </h1>
       <p class="mb-6 text-blue-100/80">{content.description}</p>
-      <a href="/auth/signin" class="text-sm text-purple-300 hover:underline">
+      <a href={withNext("/auth/signin", next)} class="text-sm text-purple-300 hover:underline">
         {content.linkText}
       </a>
     </div>

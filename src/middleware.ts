@@ -1,5 +1,6 @@
 import { defineMiddleware } from "astro:middleware";
 import { getAccountRole } from "@/lib/services/account.service";
+import { withNext } from "@/lib/redirect";
 import { createClient } from "@/lib/supabase";
 import type { AccountRole } from "@/types";
 
@@ -40,7 +41,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   if (PROTECTED_ROUTES.some((route) => context.url.pathname.startsWith(route))) {
     if (!context.locals.user) {
-      return withNoindex(context.redirect("/auth/signin"));
+      return withNoindex(context.redirect(withNext("/auth/signin", context.url.pathname + context.url.search)));
     }
   }
 

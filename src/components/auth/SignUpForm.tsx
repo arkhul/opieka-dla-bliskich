@@ -18,6 +18,10 @@ const ROLE_OPTIONS: { value: AccountRole; label: string }[] = [
 
 interface Props {
   serverError?: string | null;
+  // Already validated return address (safeNextPath); sent back to the endpoint as a hidden field.
+  next?: string | null;
+  // Role selected on first render (the user can still change it).
+  initialRole?: AccountRole;
 }
 
 // Polish plural of "znak" for the few counts the hint can show (1-5).
@@ -27,11 +31,11 @@ function charactersLabel(count: number) {
   return "znaków";
 }
 
-export default function SignUpForm({ serverError }: Props) {
+export default function SignUpForm({ serverError, next: returnTo, initialRole }: Props) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [role, setRole] = useState<AccountRole | "">("");
+  const [role, setRole] = useState<AccountRole | "">(initialRole ?? "");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string; confirmPassword?: string; role?: string }>(
@@ -87,6 +91,7 @@ export default function SignUpForm({ serverError }: Props) {
 
   return (
     <form method="POST" action="/api/auth/signup" className="space-y-4" onSubmit={handleSubmit} noValidate>
+      {returnTo && <input type="hidden" name="next" value={returnTo} />}
       <div>
         <p id="role-label" className="mb-2 block text-sm text-blue-100/80">
           Kim jesteś?
