@@ -1,5 +1,6 @@
 // Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow, the public dictionaries
-// and the caregiver profile API and pages still work together, and that RLS keeps contact data away from anon and coordinators.
+// and the caregiver profile API and pages still work together, that RLS keeps contact data away from anon and coordinators,
+// and that the public caregiver list (search_caregivers) hides incomplete profiles, filters hard and exposes no contact data.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -13,12 +14,16 @@ if (!SUPABASE_URL || !SUPABASE_KEY) {
 const stamp = Date.now();
 const email = `smoke-${stamp}@example.com`;
 const coordinatorEmail = `smoke-coordinator-${stamp}@example.com`;
+const secondCaregiverEmail = `smoke-caregiver2-${stamp}@example.com`;
+// Contact e-mail of the first caregiver: differs from the login e-mail, so absence checks look for the real value.
+const contactEmail = `kontakt-${stamp}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
 const jar = new Map();
 // Filled in by earlier steps, used by later ones.
 let caregiverId = "";
 let coordinatorId = "";
 let coordinatorToken = "";
+let secondCaregiverToken = "";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -76,11 +81,17 @@ async function supabase(path, { method = "GET", token, json } = {}) {
 const isEmptyArray = (json) => Array.isArray(json) && json.length === 0;
 const hasOneRow = (json) => Array.isArray(json) && json.length === 1;
 
+// Public caregiver list straight from the database, as anon (no token) unless one is given.
+const searchCaregivers = (args) => supabase("/rest/v1/rpc/search_caregivers", { method: "POST", json: args });
+const listsCaregiver = (json) => Array.isArray(json) && json.some((row) => row.user_id === caregiverId);
+const hidesCaregiver = (json) => Array.isArray(json) && !json.some((row) => row.user_id === caregiverId);
+const CONTACT_KEYS = ["phone", "email", "caregiver_contacts"];
+
 const completeProfile = {
   displayName: "Anna Smoke",
   description: "",
   phone: "600 100 200",
-  email: "",
+  email: contactEmail,
   gminas: ["1465011"],
   services: ["towarzystwo"],
 };
@@ -139,6 +150,26 @@ const steps = [
     { status: 400, body: (json) => typeof json.fieldErrors?.phone === "string" },
   ],
   [
+    "profile save without phone leaves profile incomplete",
+    async () => {
+      const result = await request("/api/caregiver/profile", {
+        method: "PUT",
+        json: { ...completeProfile, phone: "" },
+      });
+      caregiverId = result.json?.profile?.id ?? "";
+      return result;
+    },
+    {
+      status: 200,
+      body: (json) => typeof json.profile?.id === "string" && json.profile.missing?.includes("phone") === true,
+    },
+  ],
+  [
+    "search hides incomplete profile",
+    () => searchCaregivers({ p_teryt: "1465011", p_limit: 50 }),
+    { status: 200, body: hidesCaregiver },
+  ],
+  [
     "profile save normalizes phone and completes profile",
     async () => {
       const result = await request("/api/caregiver/profile", { method: "PUT", json: completeProfile });
@@ -175,6 +206,71 @@ const steps = [
     "anon sees the profile as complete",
     () => supabase("/rest/v1/rpc/caregiver_profile_missing", { method: "POST", json: { p_caregiver_id: caregiverId } }),
     { status: 200, body: isEmptyArray },
+  ],
+  [
+    "search lists complete profile in its gmina",
+    () => searchCaregivers({ p_teryt: "1465011", p_limit: 50 }),
+    {
+      status: 200,
+      body: (json) => {
+        const serialized = JSON.stringify(json);
+        return (
+          listsCaregiver(json) &&
+          json.every((row) => CONTACT_KEYS.every((key) => !(key in row))) &&
+          !serialized.includes(contactEmail) &&
+          !serialized.includes("+48600100200")
+        );
+      },
+    },
+  ],
+  [
+    "search hides profile in other gmina",
+    () => searchCaregivers({ p_teryt: "1061011", p_limit: 50 }),
+    { status: 200, body: hidesCaregiver },
+  ],
+  [
+    "search requires all selected services",
+    () => searchCaregivers({ p_teryt: "1465011", p_services: ["towarzystwo", "demencja"], p_limit: 50 }),
+    { status: 200, body: hidesCaregiver },
+  ],
+  [
+    "search matches selected service",
+    () => searchCaregivers({ p_teryt: "1465011", p_services: ["towarzystwo"], p_limit: 50 }),
+    { status: 200, body: listsCaregiver },
+  ],
+  [
+    "second caregiver gets Supabase access token",
+    async () => {
+      const result = await supabase("/auth/v1/signup", {
+        method: "POST",
+        json: { email: secondCaregiverEmail, password, data: { role: "caregiver" } },
+      });
+      secondCaregiverToken = result.json?.access_token ?? "";
+      return result;
+    },
+    { status: 200, body: (json) => typeof json.access_token === "string" },
+  ],
+  [
+    "second caregiver saves complete profile",
+    () =>
+      supabase("/rest/v1/rpc/save_caregiver_profile", {
+        method: "POST",
+        token: secondCaregiverToken,
+        json: {
+          p_display_name: "Bartek Smoke",
+          p_description: null,
+          p_phone: "+48600100300",
+          p_email: null,
+          p_gminas: ["1465011"],
+          p_services: ["towarzystwo"],
+        },
+      }),
+    { status: 204 },
+  ],
+  [
+    "search counts matches before the limit",
+    () => searchCaregivers({ p_teryt: "1465011", p_limit: 1 }),
+    { status: 200, body: (json) => hasOneRow(json) && Number(json[0].total_count) >= 2 },
   ],
   ["signout clears session", () => request("/api/auth/signout", { method: "POST" }), { status: 302, location: "/" }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
