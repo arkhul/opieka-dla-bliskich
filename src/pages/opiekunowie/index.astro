@@ -83,8 +83,10 @@ if (!supabase) {
 const hasFilters = filter.teryt !== null || filter.services.length > 0 || filter.availability.length > 0;
 const totalPages = Math.max(1, Math.ceil(total / CAREGIVER_PAGE_SIZE));
 const pageOutOfRange = total > 0 && caregivers.length === 0;
-// Removing any single filter still gives nothing, so only another gmina can help.
-const noNeighbourHint = filter.teryt !== null && hints.length >= 2 && hints.every((hint) => hint.count === 0);
+// Only another gmina can help: dropping the gmina filter finds someone, dropping any other single filter does not.
+const gminaHint = filter.teryt !== null ? hints.find((hint) => hint.text === "Usuń filtr gminy") : undefined;
+const noNeighbourHint =
+  gminaHint !== undefined && gminaHint.count > 0 && hints.every((hint) => hint === gminaHint || hint.count === 0);
 const selectedServices = services.filter((service) => filter.services.includes(service.slug));
 const availabilitySummary = summarizeAvailability(filter.availability);
 

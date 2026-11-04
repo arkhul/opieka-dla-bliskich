@@ -81,6 +81,8 @@ const saveProfileSchema = z.object(
       .array(z.enum(AVAILABILITY_SLOTS, { error: "Nieznany termin dostępności." }), {
         error: "Lista terminów jest niepoprawna.",
       })
+      // Input-size guard: the grid has 28 slots.
+      .max(28, { error: "Lista terminów jest zbyt długa." })
       .default([])
       // Deduplicated, in canonical order; save_caregiver_profile() re-checks the slots.
       .transform(sortAvailability),

@@ -287,7 +287,7 @@ export default function CaregiverProfileForm({ initialProfile, services, account
         <FieldError id="gminas-error" message={errors.gminas} />
       </div>
 
-      <fieldset>
+      <fieldset aria-describedby={errors.availability ? "availability-hint availability-error" : "availability-hint"}>
         <legend className="mb-1 text-sm text-blue-100/80">
           Kiedy możesz pomagać <span className="text-blue-100/50">(opcjonalnie)</span>
         </legend>
@@ -300,7 +300,6 @@ export default function CaregiverProfileForm({ initialProfile, services, account
             setAvailability(next);
             clearError("availability");
           }}
-          describedBy={errors.availability ? "availability-hint availability-error" : "availability-hint"}
         />
         <FieldError id="availability-error" message={errors.availability} />
       </fieldset>

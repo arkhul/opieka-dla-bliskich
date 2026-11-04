@@ -1,7 +1,7 @@
 ---
 change_id: caregiver-availability-filter
 title: Caregiver availability filter
-status: implemented
+status: impl_reviewed
 created: 2026-11-04
 updated: 2026-11-04
 archived_at: null

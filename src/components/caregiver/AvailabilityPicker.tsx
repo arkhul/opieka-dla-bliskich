@@ -7,12 +7,11 @@ import { cn } from "@/lib/utils";
 interface Props {
   value: AvailabilitySlot[];
   onChange: (next: AvailabilitySlot[]) => void;
-  describedBy?: string;
 }
 
 // 7 days × 4 parts of the day; same layout and headers as AvailabilityGrid.astro. Fits 375 px: short day
 // names on narrow screens, and each whole cell is the checkbox's hit area.
-export function AvailabilityPicker({ value, onChange, describedBy }: Props) {
+export function AvailabilityPicker({ value, onChange }: Props) {
   const idPrefix = useId();
   const selected = new Set<AvailabilitySlot>(value);
 
@@ -21,7 +20,7 @@ export function AvailabilityPicker({ value, onChange, describedBy }: Props) {
   }
 
   return (
-    <table className="w-full table-fixed border-collapse text-sm" aria-describedby={describedBy}>
+    <table className="w-full table-fixed border-collapse text-sm">
       <thead>
         <tr>
           <td className="w-9 sm:w-32" />

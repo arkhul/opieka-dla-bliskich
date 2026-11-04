@@ -468,13 +468,31 @@ const steps = [
     },
   ],
   [
-    "profile save without availability clears it",
-    // The previous 6-parameter shape (what the old Worker sends): the default '{}' clears the availability.
+    "profile save without availability keeps it",
+    // The 6-parameter shape (what a Worker from before S-04 sends): p_availability defaults to null = unchanged,
+    // so rolling the Worker back does not wipe availability.
+    async () => {
+      const saved = await supabase("/rest/v1/rpc/save_caregiver_profile", {
+        method: "POST",
+        token: secondCaregiverToken,
+        json: secondCaregiverProfile,
+      });
+      const listed = await searchCaregivers({ p_teryt: "1465011", p_limit: 50 });
+      const ok =
+        saved.status === 204 &&
+        listed.status === 200 &&
+        sameSlots(findSecondCaregiver(listed.json)?.availability, ["nd-wieczor", "sr-noc"]);
+      return { ...listed, json: { ok, saved: saved.status, listed: listed.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
+  ],
+  [
+    "profile save with empty availability clears it",
     () =>
       supabase("/rest/v1/rpc/save_caregiver_profile", {
         method: "POST",
         token: secondCaregiverToken,
-        json: secondCaregiverProfile,
+        json: { ...secondCaregiverProfile, p_availability: [] },
       }),
     { status: 204 },
   ],
