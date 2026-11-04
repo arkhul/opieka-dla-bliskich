@@ -1,10 +1,10 @@
 ---
 change_id: ranked-match-results
 title: Ranked match results
-status: impl_reviewed
+status: archived
 created: 2026-11-04
 updated: 2026-11-04
-archived_at: null
+archived_at: 2026-11-04T13:38:37Z
 ---
 
 ## Notes
