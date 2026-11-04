@@ -154,7 +154,7 @@ select set_eq(
   'gmina N2 returns exactly {B, D} among the fixtures'
 );
 
--- R -> {}: a retired gmina matches nobody, even F and H whose only non-retired-R gmina link is R.
+-- R -> {}: a retired gmina matches nobody, even F and H, which are linked to R.
 select is_empty(
   $$select user_id from public.search_caregivers(p_teryt := '9999031') where user_id in (
       'a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
