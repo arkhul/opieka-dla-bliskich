@@ -38,7 +38,10 @@ export const GET: APIRoute = async (context) => {
   try {
     const gminas = await searchGminas(supabase, parsed.data.q, parsed.data.limit);
     return Response.json({ gminas });
-  } catch {
+  } catch (error) {
+    // Server-side only: the client gets the generic message, the cause stays in the Worker logs.
+    // eslint-disable-next-line no-console
+    console.error("Gmina search failed", error);
     return Response.json({ error: "Failed to search gminas" }, { status: 500 });
   }
 };

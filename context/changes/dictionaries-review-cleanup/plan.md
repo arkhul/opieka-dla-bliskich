@@ -336,28 +336,28 @@ Migracja zmienia wyłącznie uprawnienia, bez danych i bez przestojów. Wycofani
 
 #### Automated
 
-- [x] 1.1 Migracja stosuje się od zera: `npx supabase db reset`
-- [x] 1.2 Kontrola uprawnień `npx supabase db query --local` zwraca dokładnie 20 wierszy macierzy, bez TRUNCATE/REFERENCES/TRIGGER
-- [x] 1.3 `npx supabase db lint` bez nowych błędów
-- [x] 1.4 `npm run lint`, `npx astro check` i `npm run build` przechodzą
-- [x] 1.5 `npm run smoke` na świeżym buildzie przechodzi w całości, łącznie z nowymi krokami uprawnień
+- [x] 1.1 Migracja stosuje się od zera: `npx supabase db reset` — fdad6eb
+- [x] 1.2 Kontrola uprawnień `npx supabase db query --local` zwraca dokładnie 20 wierszy macierzy, bez TRUNCATE/REFERENCES/TRIGGER — fdad6eb
+- [x] 1.3 `npx supabase db lint` bez nowych błędów — fdad6eb
+- [x] 1.4 `npm run lint`, `npx astro check` i `npm run build` przechodzą — fdad6eb
+- [x] 1.5 `npm run smoke` na świeżym buildzie przechodzi w całości, łącznie z nowymi krokami uprawnień — fdad6eb
 
 #### Manual
 
-- [x] 1.6 Na lokalnym preview opiekun zapisuje profil, lista z filtrem gminy działa, koordynator widzi kontakt; brak błędów uprawnień
+- [x] 1.6 Na lokalnym preview opiekun zapisuje profil, lista z filtrem gminy działa, koordynator widzi kontakt; brak błędów uprawnień — fdad6eb
 
 ### Phase 2: Kod aplikacji, smoke i README (F3, F5, F8, F6)
 
 #### Automated
 
-- [ ] 2.1 `npm run lint`, `npx astro check` i `npm run build` przechodzą
-- [ ] 2.2 `npm run smoke` na świeżym buildzie przechodzi w całości
-- [ ] 2.3 Smoke przy zatrzymanym serwerze wypisuje linie FAIL i podsumowanie z kodem wyjścia 1, bez nieobsłużonego wyjątku
+- [x] 2.1 `npm run lint`, `npx astro check` i `npm run build` przechodzą
+- [x] 2.2 `npm run smoke` na świeżym buildzie przechodzi w całości
+- [x] 2.3 Smoke przy zatrzymanym serwerze wypisuje linie FAIL i podsumowanie z kodem wyjścia 1, bez nieobsłużonego wyjątku
 
 #### Manual
 
-- [ ] 2.4 Przy zatrzymanym lokalnym Supabase `GET /api/dictionaries/services` zwraca 500, a log serwera zawiera wpis `console.error`
-- [ ] 2.5 Zalogowany opiekun wyszukuje gminy w autocomplete bez błędów; `/profil` dla anonima przekierowuje na `/auth/signin`
+- [x] 2.4 Przy zatrzymanym lokalnym Supabase `GET /api/dictionaries/services` zwraca 500, a log serwera zawiera wpis `console.error`
+- [x] 2.5 Zalogowany opiekun wyszukuje gminy w autocomplete bez błędów; `/profil` dla anonima przekierowuje na `/auth/signin`
 
 ### Phase 3: Wdrożenie produkcyjne
 

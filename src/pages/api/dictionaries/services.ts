@@ -11,7 +11,10 @@ export const GET: APIRoute = async (context) => {
   try {
     const services = await listServices(supabase);
     return Response.json({ services });
-  } catch {
+  } catch (error) {
+    // Server-side only: the client gets the generic message, the cause stays in the Worker logs.
+    // eslint-disable-next-line no-console
+    console.error("Services failed to load", error);
     return Response.json({ error: "Failed to load services" }, { status: 500 });
   }
 };

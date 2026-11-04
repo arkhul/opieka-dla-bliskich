@@ -606,27 +606,33 @@ const steps = [
 
 let failed = 0;
 for (const [name, run, expected] of steps) {
-  const actual = await run();
-  // location may be a function: ids learned by earlier steps are not known when the steps array is built.
-  const expectedLocation = typeof expected.location === "function" ? expected.location() : expected.location;
-  const ok =
-    actual.status === expected.status &&
-    (expectedLocation === undefined ||
-      (expected.exact ? actual.location === expectedLocation : actual.location.startsWith(expectedLocation))) &&
-    (expected.locationIncludes === undefined || actual.location.includes(expected.locationIncludes)) &&
-    (expected.body === undefined || (actual.json !== undefined && expected.body(actual.json))) &&
-    (expected.html === undefined || expected.html(actual.text)) &&
-    (expected.headers === undefined || expected.headers(actual.headers));
-  console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
-  if (!ok) {
+  // A thrown step (server down, rejected fetch, malformed JSON) is a FAIL with its name, not the end of the run.
+  try {
+    const actual = await run();
+    // location may be a function: ids learned by earlier steps are not known when the steps array is built.
+    const expectedLocation = typeof expected.location === "function" ? expected.location() : expected.location;
+    const ok =
+      actual.status === expected.status &&
+      (expectedLocation === undefined ||
+        (expected.exact ? actual.location === expectedLocation : actual.location.startsWith(expectedLocation))) &&
+      (expected.locationIncludes === undefined || actual.location.includes(expected.locationIncludes)) &&
+      (expected.body === undefined || (actual.json !== undefined && expected.body(actual.json))) &&
+      (expected.html === undefined || expected.html(actual.text)) &&
+      (expected.headers === undefined || expected.headers(actual.headers));
+    console.log(`${ok ? "PASS" : "FAIL"}  ${name}  -> ${actual.status} ${actual.location}`);
+    if (!ok) {
+      failed++;
+      console.log(
+        `      expected ${expected.status} ${expectedLocation ?? ""}${expected.locationIncludes ? ` + includes ${expected.locationIncludes}` : ""}${expected.body ? " + body check" : ""}` +
+          `${expected.html ? " + html check" : ""}${expected.headers ? " + headers check" : ""}`,
+      );
+      if (expected.body) console.log(`      body ${JSON.stringify(actual.json)?.slice(0, 300)}`);
+      if (expected.html) console.log(`      html ${actual.text.slice(0, 300)}`);
+      if (expected.headers) console.log(`      x-robots-tag ${actual.headers.get("x-robots-tag")}`);
+    }
+  } catch (error) {
     failed++;
-    console.log(
-      `      expected ${expected.status} ${expectedLocation ?? ""}${expected.locationIncludes ? ` + includes ${expected.locationIncludes}` : ""}${expected.body ? " + body check" : ""}` +
-        `${expected.html ? " + html check" : ""}${expected.headers ? " + headers check" : ""}`,
-    );
-    if (expected.body) console.log(`      body ${JSON.stringify(actual.json)?.slice(0, 300)}`);
-    if (expected.html) console.log(`      html ${actual.text.slice(0, 300)}`);
-    if (expected.headers) console.log(`      x-robots-tag ${actual.headers.get("x-robots-tag")}`);
+    console.log(`FAIL  ${name}  -> error ${error instanceof Error ? error.message : String(error)}`);
   }
 }
 

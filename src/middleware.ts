@@ -23,7 +23,11 @@ function withNoindex(response: Response): Response {
 export const onRequest = defineMiddleware(async (context, next) => {
   const supabase = createClient(context.request.headers, context.cookies);
 
-  if (supabase) {
+  // The dictionaries feed autocomplete (one request per keystroke) and never read locals.user or locals.getRole:
+  // skip the Supabase Auth round trip there. With no user, getRole below resolves to null.
+  if (context.url.pathname.startsWith("/api/dictionaries/")) {
+    context.locals.user = null;
+  } else if (supabase) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
