@@ -1,4 +1,5 @@
 ---
+import AvailabilityGrid from "@/components/caregiver/AvailabilityGrid.astro";
 import Topbar from "@/components/Topbar.astro";
 import Layout from "@/layouts/Layout.astro";
 import { missingItemLabel } from "@/lib/caregiver-profile";
@@ -113,6 +114,17 @@ const missingText = profile?.missing.map(missingItemLabel).join(", ") ?? "";
               </ul>
             ) : (
               <p class="text-blue-100/50">Nie wybrano gmin</p>
+            )}
+          </section>
+
+          <section>
+            <h2 class="mb-2 text-sm text-blue-100/60">Dostępność</h2>
+            {profile.availability.length > 0 ? (
+              <AvailabilityGrid selected={profile.availability} />
+            ) : (
+              <p class="text-blue-100/50">
+                Nie podano dostępności — koordynatorzy, którzy filtrują po terminach, nie zobaczą Twojego profilu.
+              </p>
             )}
           </section>
 

@@ -1,5 +1,6 @@
 import type { APIContext, APIRoute } from "astro";
 import { z } from "zod";
+import { AVAILABILITY_SLOTS, sortAvailability } from "@/lib/availability";
 import { normalizePlPhone } from "@/lib/phone";
 import { getAccountRole } from "@/lib/services/account.service";
 import { CaregiverProfileValidationError, getOwnProfile, saveOwnProfile } from "@/lib/services/caregiver.service";
@@ -76,6 +77,13 @@ const saveProfileSchema = z.object(
       .transform(unique)
       // Input-size guard only: the catalogue (public.services) is checked by save_caregiver_profile().
       .refine((slugs) => slugs.length <= 50, { error: "Lista usług jest zbyt długa." }),
+    availability: z
+      .array(z.enum(AVAILABILITY_SLOTS, { error: "Nieznany termin dostępności." }), {
+        error: "Lista terminów jest niepoprawna.",
+      })
+      .default([])
+      // Deduplicated, in canonical order; save_caregiver_profile() re-checks the slots.
+      .transform(sortAvailability),
   },
   { error: "Nieprawidłowe dane profilu." },
 );

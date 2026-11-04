@@ -129,6 +129,8 @@ const completeProfile = {
   email: contactEmail,
   gminas: ["1465011"],
   services: ["towarzystwo"],
+  // Out of order and with a duplicate: the API returns it deduplicated, in canonical order (Pn–Pt rano, Sb noc).
+  availability: ["sob-noc", "pon-rano", "wt-rano", "sr-rano", "czw-rano", "pt-rano", "pon-rano"],
 };
 
 // Second caregiver's profile, saved straight through the RPC in the previous 6-parameter shape (no p_availability).
@@ -279,8 +281,16 @@ const steps = [
       body: (json) =>
         json.profile?.displayName === "Anna Smoke" &&
         json.profile.contact?.phone === "+48600100200" &&
-        isEmptyArray(json.profile.missing),
+        isEmptyArray(json.profile.missing) &&
+        JSON.stringify(json.profile.availability) ===
+          JSON.stringify(["pon-rano", "wt-rano", "sr-rano", "czw-rano", "pt-rano", "sob-noc"]),
     },
+  ],
+  [
+    "profile save rejects unknown availability slot (API)",
+    () =>
+      request("/api/caregiver/profile", { method: "PUT", json: { ...completeProfile, availability: ["pon-swit"] } }),
+    { status: 400, body: (json) => typeof json.fieldErrors?.availability === "string" },
   ],
   ["profile page renders for caregiver", () => request("/profil"), { status: 200 }],
   // RLS and table privileges, straight against Supabase as anon: the public part is readable, contact data and roles

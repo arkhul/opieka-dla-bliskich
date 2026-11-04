@@ -393,30 +393,30 @@ Migracja nie zmienia danych: istniejące profile dostają pustą dostępność i
 
 #### Automated
 
-- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset`
-- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error`
-- [x] 1.3 Kontrola grantów przechodzi: `npx supabase db query --local -f scripts/check-table-grants.sql`
-- [x] 1.4 Lint i typy: `npm run lint` i `npx astro check`
-- [x] 1.5 Smoke przechodzi z nowymi krokami bazy: `npm run smoke`
+- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset` — 1c8cd63
+- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error` — 1c8cd63
+- [x] 1.3 Kontrola grantów przechodzi: `npx supabase db query --local -f scripts/check-table-grants.sql` — 1c8cd63
+- [x] 1.4 Lint i typy: `npm run lint` i `npx astro check` — 1c8cd63
+- [x] 1.5 Smoke przechodzi z nowymi krokami bazy: `npm run smoke` — 1c8cd63
 
 #### Manual
 
-- [x] 1.6 Macierz uprawnień ma 24 wiersze, w tym 4 nowe dla `caregiver_availability`
-- [x] 1.7 Istniejąca lista `/opiekunowie` i strona profilu działają bez zmian w wyglądzie
+- [x] 1.6 Macierz uprawnień ma 24 wiersze, w tym 4 nowe dla `caregiver_availability` — 1c8cd63
+- [x] 1.7 Istniejąca lista `/opiekunowie` i strona profilu działają bez zmian w wyglądzie — 1c8cd63
 
 ### Phase 2: Opiekun ustawia dostępność
 
 #### Automated
 
-- [ ] 2.1 Lint i typy: `npm run lint` i `npx astro check`
-- [ ] 2.2 Build: `npm run build`
-- [ ] 2.3 Smoke przechodzi z krokami API dostępności: `npm run smoke`
+- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check`
+- [x] 2.2 Build: `npm run build`
+- [x] 2.3 Smoke przechodzi z krokami API dostępności: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.4 Opiekun zapisuje Pn–Pt rano i Sb noc, `/profil` pokazuje siatkę, edycja zachowuje zaznaczenia
-- [ ] 2.5 Bez terminów `/profil` pokazuje zachętę, a komunikat o kompletności się nie zmienia
-- [ ] 2.6 Siatka w formularzu i na `/profil` działa na 375 px i z klawiatury
+- [x] 2.4 Opiekun zapisuje Pn–Pt rano i Sb noc, `/profil` pokazuje siatkę, edycja zachowuje zaznaczenia
+- [x] 2.5 Bez terminów `/profil` pokazuje zachętę, a komunikat o kompletności się nie zmienia
+- [x] 2.6 Siatka w formularzu i na `/profil` działa na 375 px i z klawiatury
 
 ### Phase 3: Koordynator filtruje i widzi dostępność
 

@@ -1,0 +1,69 @@
+---
+import { DAY_PARTS, WEEKDAYS, slotLabel, toSlot, type AvailabilitySlot } from "@/lib/availability";
+
+// 7 days × 4 parts of the day, in the same layout and with the same headers as AvailabilityPicker.tsx.
+// Without name the grid is read-only (a marker plus sr-only "dostępny" / "niedostępny" per cell); with name every
+// cell is a native checkbox (name=<name>, value=<slot>) for a GET form.
+interface Props {
+  selected: AvailabilitySlot[];
+  name?: string;
+}
+
+const { selected, name } = Astro.props;
+const selectedSlots = new Set<AvailabilitySlot>(selected);
+---
+
+<table class="w-full table-fixed border-collapse text-sm">
+  <thead>
+    <tr>
+      <td class="w-9 sm:w-32"></td>
+      {DAY_PARTS.map((part) => (
+        <th
+          scope="col"
+          class="px-0.5 pb-1 text-center align-bottom text-xs leading-tight font-normal hyphens-auto text-blue-100/80"
+        >
+          <span class="block">{part.label}</span>
+          <span class="block text-blue-100/50">{part.hours}</span>
+        </th>
+      ))}
+    </tr>
+  </thead>
+  <tbody>
+    {WEEKDAYS.map((day) => (
+      <tr class="border-t border-white/10">
+        <th scope="row" class="pr-1 text-left font-normal text-blue-100/80">
+          <span class="sm:hidden">{day.short}</span>
+          <span class="hidden sm:inline">{day.label}</span>
+        </th>
+        {DAY_PARTS.map((part) => {
+          const slot = toSlot(day.value, part.value);
+          const available = selectedSlots.has(slot);
+          return (
+            <td class="p-0.5 text-center">
+              {name ? (
+                <div class="flex h-11 items-center justify-center">
+                  <input
+                    type="checkbox"
+                    name={name}
+                    value={slot}
+                    checked={available}
+                    aria-label={slotLabel(slot)}
+                    class="size-6 cursor-pointer accent-purple-500"
+                  />
+                </div>
+              ) : (
+                <div class:list={["flex h-9 items-center justify-center rounded-md", available && "bg-purple-500/20"]}>
+                  <span
+                    aria-hidden="true"
+                    class:list={["size-3 rounded-full", available ? "bg-purple-400" : "border border-white/25"]}
+                  />
+                  <span class="sr-only">{available ? "dostępny" : "niedostępny"}</span>
+                </div>
+              )}
+            </td>
+          );
+        })}
+      </tr>
+    ))}
+  </tbody>
+</table>

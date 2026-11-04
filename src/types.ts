@@ -1,5 +1,7 @@
 // Shared entity/DTO types used by API endpoints and UI.
 
+import type { AvailabilitySlot } from "@/lib/availability";
+
 export type GminaKind = "miejska" | "wiejska" | "miejsko-wiejska";
 
 export interface ServiceDto {
@@ -30,6 +32,7 @@ export interface CaregiverContactDto {
 
 // The caregiver's own profile, including contact data: serve it only to its owner, on protected routes.
 // services follow the catalogue sort_order, gminas are sorted by label; active = false marks a retired gmina.
+// availability is in canonical slot order (src/lib/availability.ts).
 export interface OwnCaregiverProfileDto {
   id: string;
   displayName: string;
@@ -37,11 +40,12 @@ export interface OwnCaregiverProfileDto {
   contact: CaregiverContactDto;
   gminas: (GminaDto & { active: boolean })[];
   services: ServiceDto[];
+  availability: AvailabilitySlot[];
   missing: CaregiverMissingItem[];
 }
 
 // Full replacement of the caller's profile. phone is already normalized to +48XXXXXXXXX;
-// gminas are TERC codes, services are catalogue slugs.
+// gminas are TERC codes, services are catalogue slugs, availability is deduplicated and in canonical slot order.
 export interface SaveCaregiverProfileCommand {
   displayName: string;
   description: string | null;
@@ -49,17 +53,20 @@ export interface SaveCaregiverProfileCommand {
   email: string | null;
   gminas: string[];
   services: string[];
+  availability: AvailabilitySlot[];
 }
 
 // A caregiver as shown on public pages (the search list). It has no contact fields and must never get any:
 // phone, e-mail and address are served only on protected routes.
-// services follow the catalogue sort_order; gminas are the active ones, sorted by name.
+// services follow the catalogue sort_order; gminas are the active ones, sorted by name; availability is public
+// and in canonical slot order.
 export interface PublicCaregiverDto {
   id: string;
   displayName: string;
   description: string | null;
   services: ServiceDto[];
   gminas: GminaDto[];
+  availability: AvailabilitySlot[];
 }
 
 // Filters of the public caregiver list: one gmina (TERC) and the services a profile must all offer.

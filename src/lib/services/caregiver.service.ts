@@ -1,4 +1,5 @@
 import type { PostgrestSingleResponse, SupabaseClient } from "@supabase/supabase-js";
+import { sortAvailability } from "@/lib/availability";
 import { formatGminaLabel } from "@/lib/gmina";
 import type {
   CaregiverContactDto,
@@ -48,6 +49,7 @@ interface ProfileRow {
   caregiver_contacts: ContactRow | ContactRow[] | null;
   caregiver_gminas: { gminas: GminaRow | null }[];
   caregiver_services: { services: ServiceRow | null }[];
+  caregiver_availability: { slot: string }[];
 }
 
 const OWN_PROFILE_SELECT = [
@@ -57,6 +59,7 @@ const OWN_PROFILE_SELECT = [
   "caregiver_contacts(phone, email)",
   "caregiver_gminas(gminas(teryt, name, kind, powiat, wojewodztwo, active))",
   "caregiver_services(services(slug, label, sort_order))",
+  "caregiver_availability(slot)",
 ].join(", ");
 
 // Completeness rule lives in SQL; without generated DB types the rpc result is untyped (it returns text[]).
@@ -121,6 +124,7 @@ export async function getOwnProfile(supabase: SupabaseClient, userId: string): P
     contact: { phone: contact?.phone ?? null, email: contact?.email ?? null },
     gminas,
     services,
+    availability: sortAvailability(row.caregiver_availability.map(({ slot }) => slot)),
     missing,
   };
 }
@@ -134,6 +138,7 @@ export async function saveOwnProfile(supabase: SupabaseClient, cmd: SaveCaregive
     p_email: cmd.email,
     p_gminas: cmd.gminas,
     p_services: cmd.services,
+    p_availability: cmd.availability,
   });
 
   if (error) {
@@ -146,13 +151,15 @@ export async function saveOwnProfile(supabase: SupabaseClient, cmd: SaveCaregive
 
 export const CAREGIVER_PAGE_SIZE = 20;
 
-// Row of search_caregivers() and get_public_caregiver(): public columns only. services/gminas are jsonb arrays built in SQL.
+// Row of search_caregivers() and get_public_caregiver(): public columns only. services/gminas are jsonb arrays built in SQL,
+// availability is a text[] ordered by slot text (the canonical order is set here).
 interface PublicRow {
   user_id: string;
   display_name: string;
   description: string | null;
   services: ServiceDto[];
   gminas: Omit<GminaRow, "active">[];
+  availability: string[];
 }
 
 interface SearchRow extends PublicRow {
@@ -173,6 +180,7 @@ function toPublicCaregiver(row: PublicRow): PublicCaregiverDto {
       wojewodztwo,
       label: formatGminaLabel({ name, kind, powiat, wojewodztwo }),
     })),
+    availability: sortAvailability(row.availability),
   };
 }
 

@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { CircleAlert, Save } from "lucide-react";
 import { ServerError } from "@/components/auth/ServerError";
+import { AvailabilityPicker } from "@/components/caregiver/AvailabilityPicker";
 import { GminaPicker, type SelectedGmina } from "@/components/caregiver/GminaPicker";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { sortAvailability, type AvailabilitySlot } from "@/lib/availability";
 import { cn } from "@/lib/utils";
 import { formatPlPhone, normalizePlPhone } from "@/lib/phone";
 import type { OwnCaregiverProfileDto, SaveCaregiverProfileCommand, ServiceDto } from "@/types";
@@ -16,7 +18,7 @@ const DISPLAY_NAME_MAX = 60;
 const DESCRIPTION_MAX = 1000;
 const GENERIC_ERROR = "Nie udało się zapisać profilu. Spróbuj ponownie za chwilę.";
 
-type Field = "displayName" | "description" | "phone" | "email" | "gminas" | "services";
+type Field = "displayName" | "description" | "phone" | "email" | "gminas" | "services" | "availability";
 type FieldErrors = Partial<Record<Field, string>>;
 
 interface Props {
@@ -52,6 +54,7 @@ export default function CaregiverProfileForm({ initialProfile, services, account
   const [email, setEmail] = useState(initialProfile ? (initialProfile.contact.email ?? "") : accountEmail);
   const [selectedServices, setSelectedServices] = useState<string[]>(initialProfile?.services.map((s) => s.slug) ?? []);
   const [gminas, setGminas] = useState<SelectedGmina[]>(initialProfile?.gminas ?? []);
+  const [availability, setAvailability] = useState<AvailabilitySlot[]>(initialProfile?.availability ?? []);
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -104,6 +107,7 @@ export default function CaregiverProfileForm({ initialProfile, services, account
       gminas: gminas.map((g) => g.teryt),
       // Catalogue order, regardless of the order the boxes were ticked in.
       services: services.filter((s) => selectedServices.includes(s.slug)).map((s) => s.slug),
+      availability: sortAvailability(availability),
     };
 
     setSubmitting(true);
@@ -282,6 +286,24 @@ export default function CaregiverProfileForm({ initialProfile, services, account
         />
         <FieldError id="gminas-error" message={errors.gminas} />
       </div>
+
+      <fieldset>
+        <legend className="mb-1 text-sm text-blue-100/80">
+          Kiedy możesz pomagać <span className="text-blue-100/50">(opcjonalnie)</span>
+        </legend>
+        <p id="availability-hint" className="mb-2 text-xs text-blue-100/50">
+          Noc oznacza godziny 22–6 zaczynające się danego dnia.
+        </p>
+        <AvailabilityPicker
+          value={availability}
+          onChange={(next) => {
+            setAvailability(next);
+            clearError("availability");
+          }}
+          describedBy={errors.availability ? "availability-hint availability-error" : "availability-hint"}
+        />
+        <FieldError id="availability-error" message={errors.availability} />
+      </fieldset>
 
       <ServerError message={formError} />
 
