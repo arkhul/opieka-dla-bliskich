@@ -356,6 +356,12 @@ const steps = [
     { status: 401, body: deniesTable("caregiver_contacts") },
   ],
   [
+    "anon cannot embed caregiver contacts",
+    // The PostgREST embed is a second way to reach the contacts table, around the app and around the direct read above.
+    () => supabase("/rest/v1/caregiver_profiles?select=user_id,caregiver_contacts(phone,email)"),
+    { status: 401, body: deniesTable("caregiver_contacts") },
+  ],
+  [
     "anon cannot read account roles",
     () => supabase("/rest/v1/accounts"),
     { status: 401, body: deniesTable("accounts") },
@@ -633,6 +639,33 @@ const steps = [
     { status: 200, body: isEmptyArray },
   ],
   [
+    "caregiver embed shows no foreign contacts",
+    // The same embed as a signed-in caregiver who is not the owner: RLS must empty every foreign contact. The unfiltered
+    // read covers all profiles; the filtered one pins the first and second caregiver, so the absence check cannot miss
+    // them when the local database holds more profiles than one PostgREST page. Secrets are fixture values.
+    async () => {
+      const query = "select=user_id,caregiver_contacts(phone,email)";
+      const all = await supabase(`/rest/v1/caregiver_profiles?${query}`, { token: secondCaregiverToken });
+      const pair = await supabase(
+        `/rest/v1/caregiver_profiles?${query}&user_id=in.(${caregiverId},${secondCaregiverId})`,
+        { token: secondCaregiverToken },
+      );
+      const hidesFirstContact = (json) =>
+        ["600100200", "+48600100200", contactEmail].every((secret) => !JSON.stringify(json).includes(secret));
+      const own = Array.isArray(pair.json) ? pair.json.find((row) => row.user_id === secondCaregiverId) : undefined;
+      const ok =
+        all.status === 200 &&
+        pair.status === 200 &&
+        hidesFirstContact(all.json) &&
+        hidesFirstContact(pair.json) &&
+        hasOneRow(pair.json.filter((row) => row.user_id === caregiverId)) &&
+        // Positive control: the embed does return what this caregiver may read, its own contact.
+        JSON.stringify(own).includes("+48600100300");
+      return { ...pair, json: { ok, own, rows: pair.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
+  ],
+  [
     "third caregiver gets Supabase access token",
     async () => {
       const result = await supabase("/auth/v1/signup", {
@@ -859,6 +892,12 @@ const steps = [
     () => request("/api/caregiver/profile", { method: "DELETE" }),
     { status: 403 },
   ],
+  [
+    "coordinator cannot read profile API",
+    // The GET of the same endpoint serves the owner's own contact; the session here is the coordinator's.
+    () => request("/api/caregiver/profile"),
+    { status: 403 },
+  ],
   // RLS, straight against Supabase as the signed-in coordinator.
   [
     "coordinator gets Supabase access token",
@@ -895,6 +934,86 @@ const steps = [
         json: { user_id: coordinatorId, display_name: "Koordynator Smoke" },
       }),
     { status: 403 },
+  ],
+  // Writes to someone else's contact and to roles, straight against Supabase. The coordinator token reads the first
+  // caregiver's contact back (complete profile), so every denial is paired with a read of the victim's data.
+  [
+    "other caregiver cannot update a contact",
+    // RLS: someone else's contact row is not updatable, so PostgREST updates 0 rows instead of failing. Two attackers:
+    // the other caregiver cannot even see the row (select policy), the coordinator CAN see it, so only the update
+    // policy stops the coordinator; trying both keeps the probe red if either policy is loosened.
+    async () => {
+      const patch = (token) =>
+        supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${caregiverId}`, {
+          method: "PATCH",
+          token,
+          prefer: "return=representation",
+          json: { phone: "+48600999999", email: `hijack-${stamp}@example.com` },
+        });
+      const updated = await patch(secondCaregiverToken);
+      const updatedByCoordinator = await patch(coordinatorToken);
+      const kept = await supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${caregiverId}`, {
+        token: coordinatorToken,
+      });
+      const ok =
+        updated.status === 200 &&
+        isEmptyArray(updated.json) &&
+        updatedByCoordinator.status === 200 &&
+        isEmptyArray(updatedByCoordinator.json) &&
+        kept.status === 200 &&
+        hasOneRow(kept.json) &&
+        kept.json[0].phone === "+48600100200" &&
+        kept.json[0].email === contactEmail;
+      return {
+        ...updated,
+        json: { ok, updated: updated.json, updatedByCoordinator: updatedByCoordinator.json, kept: kept.json },
+      };
+    },
+    { status: 200, body: (json) => json.ok === true },
+  ],
+  [
+    "caregiver cannot change account role",
+    // accounts has no update grant at all: a permission error (not RLS), and the role stays what signup set.
+    async () => {
+      const patched = await supabase(`/rest/v1/accounts?user_id=eq.${secondCaregiverId}`, {
+        method: "PATCH",
+        token: secondCaregiverToken,
+        json: { role: "coordinator" },
+      });
+      const own = await supabase(`/rest/v1/accounts?user_id=eq.${secondCaregiverId}`, { token: secondCaregiverToken });
+      const ok =
+        patched.status === 403 &&
+        deniesTable("accounts")(patched.json) &&
+        own.status === 200 &&
+        hasOneRow(own.json) &&
+        own.json[0].role === "caregiver";
+      return { ...patched, json: { ok, patched: patched.json, own: own.json } };
+    },
+    { status: 403, body: (json) => json.ok === true },
+  ],
+  [
+    "caregiver cannot become coordinator through user metadata",
+    // The role the visitor picks at signup is user metadata that can be edited later; the RLS role comes from accounts.
+    async () => {
+      const updated = await supabase("/auth/v1/user", {
+        method: "PUT",
+        token: secondCaregiverToken,
+        json: { data: { role: "coordinator" } },
+      });
+      const own = await supabase(`/rest/v1/accounts?user_id=eq.${secondCaregiverId}`, { token: secondCaregiverToken });
+      const contact = await supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${caregiverId}`, {
+        token: secondCaregiverToken,
+      });
+      const ok =
+        updated.status === 200 &&
+        own.status === 200 &&
+        hasOneRow(own.json) &&
+        own.json[0].role === "caregiver" &&
+        contact.status === 200 &&
+        isEmptyArray(contact.json);
+      return { ...updated, json: { ok, own: own.json, contact: contact.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
   ],
   // Profile deletion, straight against Supabase, on a separate fourth caregiver ("Dorota Smoke"), so the profiles
   // used by other steps stay. Here and not next to the availability steps: coordinatorToken is known only from here.

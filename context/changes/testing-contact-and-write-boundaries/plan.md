@@ -290,24 +290,24 @@ Brak migracji i zmian schematu. Mutacje z fazy 5 robić tylko na lokalnej bazie 
 
 #### Automated
 
-- [x] 2.1 Wszystkie pliki bazy zielone: `supabase test db`
-- [x] 2.2 Pierwsza asercja pliku potwierdza działającą impersonację (`auth.uid()` = podany `sub`), widoczna w wyjściu `supabase test db`
+- [x] 2.1 Wszystkie pliki bazy zielone: `supabase test db` — d795242
+- [x] 2.2 Pierwsza asercja pliku potwierdza działającą impersonację (`auth.uid()` = podany `sub`), widoczna w wyjściu `supabase test db` — d795242
 
 #### Manual
 
-- [x] 2.3 Po przebiegu w bazie brak gmin `9999%`, użytkowników `b0000000-…` i innych śladów fikstur
+- [x] 2.3 Po przebiegu w bazie brak gmin `9999%`, użytkowników `b0000000-…` i innych śladów fikstur — d795242
 
 ### Phase 3: Smoke — luki #3 i sondy #4
 
 #### Automated
 
-- [ ] 3.1 Lint przechodzi: `npm run lint`
-- [ ] 3.2 Typy przechodzą: `npx astro check`
-- [ ] 3.3 Budowa i smoke na świeżym preview: `npm run build` oraz `npm run smoke` (po zatrzymaniu nieaktualnego preview na :4321)
+- [x] 3.1 Lint przechodzi: `npm run lint`
+- [x] 3.2 Typy przechodzą: `npx astro check`
+- [x] 3.3 Budowa i smoke na świeżym preview: `npm run build` oraz `npm run smoke` (po zatrzymaniu nieaktualnego preview na :4321)
 
 #### Manual
 
-- [ ] 3.4 Drugi przebieg `npm run smoke` na tej samej bazie też przechodzi (stan kumuluje się między uruchomieniami)
+- [x] 3.4 Drugi przebieg `npm run smoke` na tej samej bazie też przechodzi (stan kumuluje się między uruchomieniami)
 
 ### Phase 4: Smoke — cykl formularza #6
 
