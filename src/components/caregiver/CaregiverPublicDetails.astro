@@ -1,4 +1,5 @@
 ---
+import AvailabilityGrid from "@/components/caregiver/AvailabilityGrid.astro";
 import type { PublicCaregiverDto } from "@/types";
 
 // The public part of a caregiver profile, shared by the public and the protected page. It takes
@@ -35,4 +36,12 @@ const { caregiver } = Astro.props;
       </ul>
     </section>
   )}
+  <section class="space-y-2">
+    <h2 class="text-sm text-blue-100/60">Dostępność</h2>
+    {caregiver.availability.length > 0 ? (
+      <AvailabilityGrid selected={caregiver.availability} />
+    ) : (
+      <p class="text-sm text-blue-100/70">Dostępność nie podana</p>
+    )}
+  </section>
 </article>

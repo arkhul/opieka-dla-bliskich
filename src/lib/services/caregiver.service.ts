@@ -185,10 +185,12 @@ function toPublicCaregiver(row: PublicRow): PublicCaregiverDto {
 }
 
 async function runSearch(supabase: SupabaseClient, filter: CaregiverSearchFilter, limit: number, offset: number) {
-  // Without generated DB types the rpc result is untyped; the filter semantics live in SQL.
+  // Without generated DB types the rpc result is untyped; the filter semantics live in SQL
+  // (an empty p_availability means no availability filter).
   const { data, error } = (await supabase.rpc("search_caregivers", {
     p_teryt: filter.teryt,
     p_services: filter.services,
+    p_availability: filter.availability,
     p_limit: limit,
     p_offset: offset,
   })) as PostgrestSingleResponse<SearchRow[]>;

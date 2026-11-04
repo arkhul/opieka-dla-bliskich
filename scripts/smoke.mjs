@@ -7,7 +7,8 @@
 // Table privileges are checked too: anon and authenticated get only the explicit grants, so reads of contacts and roles
 // by anon and writes to the dictionaries fail with "permission denied" before RLS is even consulted.
 // Caregiver availability (caregiver_availability) is public to read, written only by its owner through save_caregiver_profile(),
-// and the search availability filter matches profiles with at least one selected slot.
+// and the search availability filter matches profiles with at least one selected slot. On the pages: the list filter
+// (termin), the availability line on cards, the relax hint and the grid on the public profile page.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -118,6 +119,12 @@ const sameSlots = (actual, expected) =>
   [...actual].sort().join() === [...expected].sort().join();
 const CONTACT_KEYS = ["phone", "email", "caregiver_contacts"];
 const hasNoindex = (headers) => (headers.get("x-robots-tag") ?? "").includes("noindex");
+// The first caregiver's phone in every form plus the contact and login e-mails: none may appear on the public list.
+const hidesListContact = (text) =>
+  ["600 100 200", "600100200", "+48600100200", contactEmail, email].every((secret) => !text.includes(secret));
+// The first caregiver's contact as it could appear on its public profile page.
+const hidesProfileContact = (text) =>
+  [contactEmail, "+48600100200", "600100200", "600 100 200"].every((secret) => !text.includes(secret));
 
 // The 13 catalogue slugs (also checked by "services dictionary lists 13 services"), filled by that step.
 let allServiceSlugs = [];
@@ -557,12 +564,36 @@ const steps = [
     {
       status: 200,
       headers: hasNoindex,
+      html: (text) => text.includes("Anna Smoke") && hidesListContact(text),
+    },
+  ],
+  // Availability on the list, as anonymous user: "Anna Smoke" has Pn–Pt rano + Sb noc, "Bartek Smoke" has none.
+  [
+    "caregiver list filters by availability",
+    () => request("/opiekunowie?gmina=1465011&termin=pon-rano"),
+    {
+      status: 200,
       html: (text) =>
         text.includes("Anna Smoke") &&
-        ["600 100 200", "600100200", "+48600100200", completeProfile.email, email].every(
-          (secret) => !text.includes(secret),
-        ),
+        text.includes("Pn–Pt: rano · Sb: noc") &&
+        !text.includes("Bartek Smoke") &&
+        hidesListContact(text),
     },
+  ],
+  [
+    "caregiver list shows missing availability",
+    () => request("/opiekunowie?gmina=1465011"),
+    { status: 200, html: (text) => text.includes("Bartek Smoke") && text.includes("Dostępność nie podana") },
+  ],
+  [
+    "caregiver list shows availability relax hint",
+    () => request("/opiekunowie?gmina=1465011&termin=czw-noc"),
+    { status: 200, html: (text) => text.includes("Usuń filtr dostępności (wyniki:") },
+  ],
+  [
+    "caregiver list ignores malformed availability",
+    () => request("/opiekunowie?gmina=1465011&termin=xyz"),
+    { status: 200, html: (text) => text.includes("Anna Smoke") && text.includes("Bartek Smoke") },
   ],
   [
     "caregiver list shows relax hints when nothing matches",
@@ -597,9 +628,16 @@ const steps = [
       status: 200,
       headers: hasNoindex,
       html: (text) =>
-        text.includes("Anna Smoke") &&
-        text.includes(`href="/kontakt/${caregiverId}"`) &&
-        [contactEmail, "+48600100200", "600100200", "600 100 200"].every((secret) => !text.includes(secret)),
+        text.includes("Anna Smoke") && text.includes(`href="/kontakt/${caregiverId}"`) && hidesProfileContact(text),
+    },
+  ],
+  [
+    "public profile page shows availability",
+    () => request(`/opiekunowie/${caregiverId}`),
+    {
+      status: 200,
+      // ">dostępny<": the whole sr-only text of an available cell ("dostępny" alone would also match "niedostępny").
+      html: (text) => text.includes(">Dostępność<") && text.includes(">dostępny<") && hidesProfileContact(text),
     },
   ],
   [

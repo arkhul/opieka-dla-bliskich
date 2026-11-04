@@ -1,7 +1,9 @@
 ---
+import AvailabilityGrid from "@/components/caregiver/AvailabilityGrid.astro";
 import Topbar from "@/components/Topbar.astro";
 import { GminaSelect } from "@/components/search/GminaSelect";
 import Layout from "@/layouts/Layout.astro";
+import { summarizeAvailability } from "@/lib/availability";
 import { buildCaregiverSearchHref, CAREGIVER_LIST_PATH, parseCaregiverSearch } from "@/lib/caregiver-search";
 import { CAREGIVER_PAGE_SIZE, countCaregivers, searchCaregivers } from "@/lib/services/caregiver.service";
 import { getActiveGmina, listServices } from "@/lib/services/dictionary.service";
@@ -22,7 +24,7 @@ interface RelaxHint {
 const supabase = createClient(Astro.request.headers, Astro.cookies);
 let pageError: string | null = null;
 let services: ServiceDto[] = [];
-let filter: CaregiverSearchFilter = { teryt: null, services: [] };
+let filter: CaregiverSearchFilter = { teryt: null, services: [], availability: [] };
 let page = 1;
 let selectedGmina: GminaDto | null = null;
 let gminaNotice: string | null = null;
@@ -51,10 +53,13 @@ if (!supabase) {
     ({ caregivers, total } = await searchCaregivers(supabase, filter, page));
 
     // Nothing matches: count what removing each single filter would give, so the hint links are honest.
-    if (total === 0 && (filter.teryt || filter.services.length > 0)) {
+    if (total === 0 && (filter.teryt || filter.services.length > 0 || filter.availability.length > 0)) {
       const candidates: { text: string; relaxed: CaregiverSearchFilter }[] = [];
       if (filter.services.length > 0) {
         candidates.push({ text: "Usuń filtr usług", relaxed: { ...filter, services: [] } });
+      }
+      if (filter.availability.length > 0) {
+        candidates.push({ text: "Usuń filtr dostępności", relaxed: { ...filter, availability: [] } });
       }
       if (filter.teryt) {
         candidates.push({ text: "Usuń filtr gminy", relaxed: { ...filter, teryt: null } });
@@ -75,11 +80,13 @@ if (!supabase) {
   }
 }
 
-const hasFilters = filter.teryt !== null || filter.services.length > 0;
+const hasFilters = filter.teryt !== null || filter.services.length > 0 || filter.availability.length > 0;
 const totalPages = Math.max(1, Math.ceil(total / CAREGIVER_PAGE_SIZE));
 const pageOutOfRange = total > 0 && caregivers.length === 0;
-const noNeighbourHint = hints.length === 2 && hints.every((hint) => hint.count === 0);
+// Removing any single filter still gives nothing, so only another gmina can help.
+const noNeighbourHint = filter.teryt !== null && hints.length >= 2 && hints.every((hint) => hint.count === 0);
 const selectedServices = services.filter((service) => filter.services.includes(service.slug));
+const availabilitySummary = summarizeAvailability(filter.availability);
 
 // The gmina the visitor filtered by goes first on a card; the rest keep their order.
 function orderGminas(gminas: GminaDto[]): GminaDto[] {
@@ -142,6 +149,13 @@ const buttonClass =
               </div>
             </fieldset>
 
+            <fieldset class="min-w-0">
+              <legend class="mb-2 text-sm font-medium text-blue-100/80">
+                Dostępność (opiekun musi mieć co najmniej jeden z zaznaczonych terminów)
+              </legend>
+              <AvailabilityGrid selected={filter.availability} name="termin" />
+            </fieldset>
+
             <div class="flex flex-wrap items-center gap-4">
               <button type="submit" class:list={buttonClass}>
                 Pokaż wyniki
@@ -178,6 +192,15 @@ const buttonClass =
                   </a>
                 </li>
               ))}
+              {availabilitySummary && (
+                <li class="max-w-full">
+                  <a href={buildCaregiverSearchHref({ ...filter, availability: [] })} class:list={chipLinkClass}>
+                    <span class="min-w-0 break-words">Dostępność ({availabilitySummary})</span>
+                    <span aria-hidden="true">×</span>
+                    <span class="sr-only">(usuń filtr)</span>
+                  </a>
+                </li>
+              )}
             </ul>
           )}
 
@@ -219,6 +242,7 @@ const buttonClass =
                   const gminas = orderGminas(caregiver.gminas);
                   const shown = gminas.slice(0, MAX_GMINA_LABELS);
                   const hidden = gminas.length - shown.length;
+                  const availability = summarizeAvailability(caregiver.availability);
                   return (
                     <li>
                       <article class="min-w-0 space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
@@ -245,6 +269,9 @@ const buttonClass =
                             {hidden > 0 && ` +${hidden}`}
                           </p>
                         )}
+                        <p class="text-sm break-words text-blue-100/70">
+                          {availability ? `Dostępność: ${availability}` : "Dostępność nie podana"}
+                        </p>
                       </article>
                     </li>
                   );

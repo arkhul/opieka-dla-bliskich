@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { sortAvailability } from "@/lib/availability";
 import type { CaregiverSearchFilter } from "@/types";
 
 export const CAREGIVER_LIST_PATH = "/opiekunowie";
@@ -14,7 +15,8 @@ const pageSchema = z.coerce
   .transform((value) => Math.min(value, MAX_PAGE));
 
 // Reads the list filters from the URL. Malformed values are ignored (never an error), so a hand-edited
-// or stale link still renders a list. Services come back de-duplicated and in catalogue order.
+// or stale link still renders a list. Services come back de-duplicated and in catalogue order, availability slots
+// de-duplicated and in canonical slot order.
 export function parseCaregiverSearch(
   params: URLSearchParams,
   knownServiceSlugs: string[],
@@ -28,6 +30,7 @@ export function parseCaregiverSearch(
     filter: {
       teryt: teryt.success ? teryt.data : null,
       services: knownServiceSlugs.filter((slug) => requested.has(slug)),
+      availability: sortAvailability(params.getAll("termin")),
     },
     page: page?.success ? page.data : 1,
   };
@@ -41,6 +44,9 @@ export function buildCaregiverSearchHref(filter: CaregiverSearchFilter, page = 1
   }
   for (const slug of filter.services) {
     params.append("usluga", slug);
+  }
+  for (const slot of sortAvailability(filter.availability)) {
+    params.append("termin", slot);
   }
   if (page > 1) {
     params.append("strona", String(page));

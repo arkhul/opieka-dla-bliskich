@@ -408,30 +408,30 @@ Migracja nie zmienia danych: istniejące profile dostają pustą dostępność i
 
 #### Automated
 
-- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check`
-- [x] 2.2 Build: `npm run build`
-- [x] 2.3 Smoke przechodzi z krokami API dostępności: `npm run smoke`
+- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check` — cc1ced6
+- [x] 2.2 Build: `npm run build` — cc1ced6
+- [x] 2.3 Smoke przechodzi z krokami API dostępności: `npm run smoke` — cc1ced6
 
 #### Manual
 
-- [x] 2.4 Opiekun zapisuje Pn–Pt rano i Sb noc, `/profil` pokazuje siatkę, edycja zachowuje zaznaczenia
-- [x] 2.5 Bez terminów `/profil` pokazuje zachętę, a komunikat o kompletności się nie zmienia
-- [x] 2.6 Siatka w formularzu i na `/profil` działa na 375 px i z klawiatury
+- [x] 2.4 Opiekun zapisuje Pn–Pt rano i Sb noc, `/profil` pokazuje siatkę, edycja zachowuje zaznaczenia — cc1ced6
+- [x] 2.5 Bez terminów `/profil` pokazuje zachętę, a komunikat o kompletności się nie zmienia — cc1ced6
+- [x] 2.6 Siatka w formularzu i na `/profil` działa na 375 px i z klawiatury — cc1ced6
 
 ### Phase 3: Koordynator filtruje i widzi dostępność
 
 #### Automated
 
-- [ ] 3.1 Lint i typy: `npm run lint` i `npx astro check`
-- [ ] 3.2 Build: `npm run build`
-- [ ] 3.3 Smoke przechodzi z krokami stron: `npm run smoke`
+- [x] 3.1 Lint i typy: `npm run lint` i `npx astro check`
+- [x] 3.2 Build: `npm run build`
+- [x] 3.3 Smoke przechodzi z krokami stron: `npm run smoke`
 
 #### Manual
 
-- [ ] 3.4 Filtr „Pn rano” + „Śr rano” działa w trybie OR, URL ma `termin=…`, chip zdejmuje tylko dostępność
-- [ ] 3.5 Pusty wynik z filtrem dostępności pokazuje „Usuń filtr dostępności (wyniki: N)”
-- [ ] 3.6 Karty pokazują linię dostępności albo „Dostępność nie podana”, strony profilu pokazują siatkę
-- [ ] 3.7 Filtr, chipy i karty są czytelne na 375 px
+- [x] 3.4 Filtr „Pn rano” + „Śr rano” działa w trybie OR, URL ma `termin=…`, chip zdejmuje tylko dostępność
+- [x] 3.5 Pusty wynik z filtrem dostępności pokazuje „Usuń filtr dostępności (wyniki: N)”
+- [x] 3.6 Karty pokazują linię dostępności albo „Dostępność nie podana”, strony profilu pokazują siatkę
+- [x] 3.7 Filtr, chipy i karty są czytelne na 375 px
 
 ### Phase 4: Wdrożenie produkcyjne
 

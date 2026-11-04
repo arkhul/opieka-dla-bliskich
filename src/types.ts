@@ -69,8 +69,10 @@ export interface PublicCaregiverDto {
   availability: AvailabilitySlot[];
 }
 
-// Filters of the public caregiver list: one gmina (TERC) and the services a profile must all offer.
+// Filters of the public caregiver list: one gmina (TERC), the services a profile must all offer and the availability
+// slots of which a profile must have at least one (empty = no availability filter; canonical slot order).
 export interface CaregiverSearchFilter {
   teryt: string | null;
   services: string[];
+  availability: AvailabilitySlot[];
 }
