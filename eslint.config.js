@@ -81,6 +81,14 @@ const scriptsConfig = defineConfig({
   rules: { "no-console": "off" },
 });
 
+const e2eConfig = defineConfig({
+  files: ["e2e/**/*.ts", "playwright.config.ts"],
+  rules: {
+    // Playwright fixtures take a `use` callback parameter; react-hooks mistakes it for the `use` React Hook.
+    "react-hooks/rules-of-hooks": "off",
+  },
+});
+
 export default defineConfig(
   includeIgnoreFile(gitignorePath),
   // Agent tooling (course skills, prompts) is vendored, not app code.
@@ -91,5 +99,6 @@ export default defineConfig(
   eslintPluginAstro.configs["flat/jsx-a11y-recommended"],
   astroConfig,
   scriptsConfig,
+  e2eConfig,
   eslintPluginPrettier,
 );

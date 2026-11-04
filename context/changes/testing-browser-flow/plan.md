@@ -240,27 +240,27 @@ Brak zmian danych ani schematu. Rollback: usunięcie `e2e/`, `playwright.config.
 
 #### Automated
 
-- [x] 1.1 Pakiet i konfiguracja istnieją: `node -e "require('@playwright/test/package.json')"` oraz plik `playwright.config.ts`
-- [x] 1.2 Przeglądarka zainstalowana lokalnie: `npx playwright install chromium`
-- [x] 1.3 Seed-test przechodzi na obu projektach (przy zatrzymanym preview): `npm run e2e`
-- [x] 1.4 Lint przechodzi: `npm run lint`
-- [x] 1.5 Typy przechodzą: `npx astro check`
-- [x] 1.6 Build przechodzi: `npm run build`
+- [x] 1.1 Pakiet i konfiguracja istnieją: `node -e "require('@playwright/test/package.json')"` oraz plik `playwright.config.ts` — 00eacdd
+- [x] 1.2 Przeglądarka zainstalowana lokalnie: `npx playwright install chromium` — 00eacdd
+- [x] 1.3 Seed-test przechodzi na obu projektach (przy zatrzymanym preview): `npm run e2e` — 00eacdd
+- [x] 1.4 Lint przechodzi: `npm run lint` — 00eacdd
+- [x] 1.5 Typy przechodzą: `npx astro check` — 00eacdd
+- [x] 1.6 Build przechodzi: `npm run build` — 00eacdd
 
 #### Manual
 
-- [x] 1.7 Przy uruchomionym nieaktualnym `astro preview` na :4321 `npm run e2e` kończy się błędem zajętego portu zamiast testować starą instancję
-- [x] 1.8 `playwright-report/` i `test-results/` nie pojawiają się w `git status`
+- [x] 1.7 Przy uruchomionym nieaktualnym `astro preview` na :4321 `npm run e2e` kończy się błędem zajętego portu zamiast testować starą instancję — 00eacdd
+- [x] 1.8 `playwright-report/` i `test-results/` nie pojawiają się w `git status` — 00eacdd
 
 ### Phase 2: Test przepływu koordynatora
 
 #### Automated
 
-- [ ] 2.1 Test przepływu przechodzi na obu projektach: `npm run e2e`
-- [ ] 2.2 Seed-test nadal przechodzi: `npm run e2e`
-- [ ] 2.3 Lint przechodzi: `npm run lint`
-- [ ] 2.4 Typy przechodzą: `npx astro check`
-- [ ] 2.5 Smoke nadal zielony na tym samym preview i bazie: `npm run smoke`
+- [x] 2.1 Test przepływu przechodzi na obu projektach: `npm run e2e`
+- [x] 2.2 Seed-test nadal przechodzi: `npm run e2e`
+- [x] 2.3 Lint przechodzi: `npm run lint`
+- [x] 2.4 Typy przechodzą: `npx astro check`
+- [x] 2.5 Smoke nadal zielony na tym samym preview i bazie: `npm run smoke`
 
 #### Manual
 
