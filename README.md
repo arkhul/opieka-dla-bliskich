@@ -1,74 +1,102 @@
-# 10x Astro Starter
+# Opieka dla bliskich
 
-![](./public/template.png)
+Katalog opiekunów dla rodzinnych koordynatorów opieki, czyli osób, które organizują stałą opiekę dla bliskiego (np. córki szukającej pomocy dla matki po wylewie). Koordynator bez logowania filtruje opiekunów po gminie, rodzaju usługi i dostępności i dostaje listę uszeregowaną według dopasowania, z oznaczeniem braków. Dane kontaktowe opiekuna zobaczy dopiero po założeniu konta. Dalszy kontakt i ustalenia odbywają się poza portalem.
 
-A modern, opinionated starter template for building fast, accessible web applications.
+**Wersja produkcyjna:** https://opieka-dla-bliskich.baal-perez.workers.dev
 
-## Tech Stack
+Projekt zaliczeniowy 10xDevs 4.0 (10xBuilder).
 
-- [Astro](https://astro.build/) v7 - Modern web framework with server-first rendering
-- [React](https://react.dev/) v19 - UI library for interactive components
-- [TypeScript](https://www.typescriptlang.org/) v6 - Type-safe JavaScript
-- [Tailwind CSS](https://tailwindcss.com/) v4 - Utility-first CSS framework
-- [Supabase](https://supabase.com/) - Authentication and backend-as-a-service
-- [Cloudflare Workers](https://workers.cloudflare.com/) - Edge deployment runtime
+## Jak sprawdzić główny przepływ
 
-## Prerequisites
+1. **Opiekun:** `/auth/signup` → „Oferuję opiekę — jestem opiekunem” → `/profil/edycja`: opis, telefon i e-mail, obsługiwane gminy, usługi i dostępność (dni tygodnia × pory dnia). Profil można później edytować i trwale usunąć (`/profil`).
+2. **Koordynator bez logowania:** `/opiekunowie` → wybór gminy, usług i terminów. Wyniki są uszeregowane według dopasowania, a karta pokazuje, czego profilowi brakuje. Profil publiczny (`/opiekunowie/<id>`) nie zawiera danych kontaktowych.
+3. **Odsłonięcie kontaktu:** „Pokaż dane kontaktowe” → logowanie albo rejestracja koordynatora → powrót na `/kontakt/<id>` z telefonem i e-mailem.
 
-- Node.js v22.14.0 (as specified in `.nvmrc`)
-- npm (comes with Node.js)
+## Co jest w środku
 
-## Getting Started
+| Obszar           | Gdzie                                                                                                                                                                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Kontrola dostępu | `src/middleware.ts` (`PROTECTED_ROUTES`: `/dashboard`, `/profil`, `/kontakt`), role opiekun/koordynator, RLS i jawne granty na każdej tabeli (`supabase/migrations/`); kontakt czyta wyłącznie zalogowany koordynator, opiekun edytuje i usuwa tylko własny profil |
+| CRUD             | Profil opiekuna: zapis i edycja (`PUT /api/caregiver/profile`, `src/pages/profil/edycja.astro`), odczyt (`/opiekunowie`, `/opiekunowie/[id]`, `/profil`), trwałe usunięcie (`src/components/caregiver/DeleteProfileDialog.tsx`)                                    |
+| Logika biznesowa | Funkcja SQL `search_caregivers()` (`supabase/migrations/20261104140000_ranked_caregiver_search.sql` i późniejsze): gmina jako warunek konieczny, ranking według pokrycia usług, potem terminów, oznaczenie brakujących usług i terminów                            |
+| Słowniki         | Wszystkie gminy z TERYT (z obsługą gmin wycofanych i ich następców) oraz zamknięty katalog usług                                                                                                                                                                   |
 
-1. Clone the repository:
+## Dokumenty kontekstowe
+
+Projekt powstawał w przepływie 10xDevs (shape → PRD → roadmapa → zmiany z planem, implementacją i przeglądem):
+
+- `context/foundation/prd.md`: wymagania produktu (FR-001…FR-016, US-01, guardrails dotyczące danych kontaktowych)
+- `context/foundation/roadmap.md`: kamień milowy M-1 (F-01, S-01…S-06), zamknięty
+- `context/foundation/tech-stack.md`, `context/foundation/infrastructure.md`: wybór stacku i platformy wdrożenia
+- `context/foundation/test-plan.md`: mapa ryzyk i etapowe wdrażanie testów
+- `context/archive/`: każda zrealizowana zmiana z planem, research i przeglądami (plan review, impl review)
+- `AGENTS.md`: zasady dla agentów AI pracujących w repo
+
+## Testy i CI
+
+Testy wynikają z mapy ryzyk w `context/foundation/test-plan.md`. Dla każdego etapu udokumentowano dowód czułości mutacjami: celowo psuje się regułę, test robi się czerwony, po przywróceniu wraca do zieleni.
+
+| Warstwa                             | Pliki                                                                                            | Ryzyko                                                                                                                     |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| pgTAP (`supabase test db`)          | `supabase/tests/database/search_caregivers_gmina.test.sql`, `search_caregivers_ranking.test.sql` | #1 opiekun spoza gminy w wynikach, #2 błędny ranking lub oznaczenie braków                                                 |
+| pgTAP                               | `supabase/tests/database/grants_matrix.test.sql`, `write_boundaries.test.sql`                    | #4 zapis i usuwanie cudzych danych bezpośrednio przez API bazy, domyślne granty                                            |
+| Smoke HTTP + baza (`npm run smoke`) | `scripts/smoke.mjs`                                                                              | #3 wyciek kontaktu do niezalogowanego (HTML, API, baza), auth, RLS, usuwanie                                               |
+| E2E Playwright (`npm run e2e`)      | `e2e/coordinator-flow.spec.ts` (projekty `desktop` i `mobile`)                                   | #5 przepływ koordynatora w przeglądarce: filtr → ranking z brakami → logowanie → kontakt; bez logowania kontaktu nie widać |
+
+CI (`.github/workflows/ci.yml`) na każdym pushu i PR do `master` uruchamia lint, type check, build, kontrolę grantów tabel (`scripts/check-table-grants.sql`), pgTAP, smoke i e2e na lokalnym Supabase. Wszystkie kroki są wymagane.
+
+## Stack
+
+- [Astro](https://astro.build/) 7 (SSR) z wyspami [React](https://react.dev/) 19, TypeScript 6
+- [Tailwind CSS](https://tailwindcss.com/) 4 i [shadcn/ui](https://ui.shadcn.com/)
+- [Supabase](https://supabase.com/): Postgres, Auth, RLS
+- [Cloudflare Workers](https://workers.cloudflare.com/): hosting produkcyjny
+
+Projekt powstał na bazie [10x Astro Starter](https://github.com/przeprogramowani/10x-astro-starter).
+
+## Uruchomienie lokalne
+
+Wymagania: Node.js v22.14.0 (`.nvmrc`), npm, Docker (lokalny Supabase).
 
 ```bash
-git clone https://github.com/przeprogramowani/10x-astro-starter.git
-cd 10x-astro-starter
-```
-
-2. Install dependencies:
-
-```bash
+git clone https://github.com/arkhul/opieka-dla-bliskich.git
+cd opieka-dla-bliskich
 npm install
-```
-
-3. Set up Supabase and configure environment variables — see [Supabase Configuration](#supabase-configuration) below.
-
-4. Create a `.dev.vars` file for local Cloudflare dev secrets:
-
-```bash
-cp .env.example .dev.vars
-```
-
-5. Run the development server:
-
-```bash
+cp .env.example .env        # potem uzupełnij SUPABASE_URL / SUPABASE_KEY, patrz niżej
+cp .env.example .dev.vars   # sekrety dla lokalnego workerd
+npx supabase start
+npx supabase db reset       # migracje: schemat, słowniki, funkcje
 npm run dev
 ```
 
-## Available Scripts
+## Skrypty
 
-- `npm run dev` - Start development server (Cloudflare workerd runtime)
-- `npm run build` - Build for production
-- `npm run preview` - Preview production build
-- `npm run lint` - Run ESLint with type-checked rules
-- `npm run lint:fix` - Auto-fix ESLint issues
-- `npm run format` - Run Prettier
-- `npm run smoke` - Smoke test the auth flow, the dictionaries, the caregiver profile API, the public caregiver list, the contact reveal, and RLS and table privileges against a running server (`BASE_URL`, defaults to `http://localhost:4321`; reads `SUPABASE_URL`/`SUPABASE_KEY` from `.env`)
+- `npm run dev`: serwer deweloperski (runtime workerd Cloudflare)
+- `npm run build` / `npm run preview`: build produkcyjny i jego podgląd
+- `npm run lint` / `npm run lint:fix` / `npm run format`: ESLint i Prettier
+- `npx astro check`: type check
+- `npm run smoke`: test integracyjny HTTP + baza na działającym serwerze (`BASE_URL`, domyślnie `http://localhost:4321`; czyta `SUPABASE_URL`/`SUPABASE_KEY` z `.env`)
+- `npm run e2e`: Playwright; bez `BASE_URL` sam buduje i uruchamia preview na :4321
+- `npx supabase test db`: testy pgTAP
 
-## Project Structure
+## Struktura projektu
 
 ```md
 .
 ├── src/
-│ ├── layouts/ # Astro layouts
-│ ├── pages/ # Astro pages
-│ │ └── api/ # API endpoints
-│ ├── components/ # UI components (Astro & React)
-│ └── assets/ # Static assets
-├── public/ # Public assets
-├── wrangler.jsonc # Cloudflare Workers config
+│ ├── pages/ # strony Astro i endpointy API (src/pages/api/)
+│ ├── components/ # komponenty Astro i React (caregiver/, search/, auth/, ui/)
+│ ├── lib/ # czyste helpery; lib/services/ to dostęp do Supabase per encja
+│ ├── hooks/ # hooki React
+│ ├── middleware.ts # sesja, role, chronione trasy, noindex
+│ └── types.ts # wspólne typy encji i DTO
+├── supabase/
+│ ├── migrations/ # schemat, RLS, granty, funkcje wyszukiwania
+│ └── tests/database/ # testy pgTAP
+├── e2e/ # testy Playwright
+├── scripts/ # smoke, kontrola grantów, generator migracji gmin
+├── context/ # PRD, roadmapa, plan testów, historia zmian
+└── wrangler.jsonc # konfiguracja Cloudflare Workers
 ```
 
 ## Supabase Configuration
