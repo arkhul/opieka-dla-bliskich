@@ -301,13 +301,13 @@ Brak migracji i zmian schematu. Mutacje z fazy 5 robić tylko na lokalnej bazie 
 
 #### Automated
 
-- [x] 3.1 Lint przechodzi: `npm run lint`
-- [x] 3.2 Typy przechodzą: `npx astro check`
-- [x] 3.3 Budowa i smoke na świeżym preview: `npm run build` oraz `npm run smoke` (po zatrzymaniu nieaktualnego preview na :4321)
+- [x] 3.1 Lint przechodzi: `npm run lint` — 6d8234a
+- [x] 3.2 Typy przechodzą: `npx astro check` — 6d8234a
+- [x] 3.3 Budowa i smoke na świeżym preview: `npm run build` oraz `npm run smoke` (po zatrzymaniu nieaktualnego preview na :4321) — 6d8234a
 
 #### Manual
 
-- [x] 3.4 Drugi przebieg `npm run smoke` na tej samej bazie też przechodzi (stan kumuluje się między uruchomieniami)
+- [x] 3.4 Drugi przebieg `npm run smoke` na tej samej bazie też przechodzi (stan kumuluje się między uruchomieniami) — 6d8234a
 
 ### Phase 4: Smoke — cykl formularza #6
 
