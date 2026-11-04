@@ -51,6 +51,9 @@ jobs:
         run: |
           supabase start -x studio,imgproxy,mailpit,edge-runtime,logflare,vector,realtime,storage-api,postgres-meta,supavisor
           supabase status -o env | grep -E '^(API_URL|ANON_KEY)=' > supabase.env
+      # Fails if any public table, including ones added later, still has Supabase's default ALL grants (TRUNCATE etc.).
+      - name: Check table grants
+        run: supabase db query --local -f scripts/check-table-grants.sql
       - name: Configure secrets for build and preview
         run: |
           source supabase.env

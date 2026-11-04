@@ -1,7 +1,7 @@
 ---
 change_id: dictionaries-review-cleanup
 title: Domknięcie otwartych ustaleń z przeglądu F-01 i porządki w roadmapie
-status: implemented
+status: impl_reviewed
 created: 2026-11-03
 updated: 2026-11-04
 archived_at: null

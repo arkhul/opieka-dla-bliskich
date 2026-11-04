@@ -6,6 +6,9 @@ import type { AccountRole } from "@/types";
 
 const PROTECTED_ROUTES = ["/dashboard", "/profil", "/kontakt"];
 
+// Exact paths, not a prefix: a new endpoint here must opt in, so it cannot silently lose locals.user.
+const NO_AUTH_ROUTES = new Set(["/api/dictionaries/gminas", "/api/dictionaries/services"]);
+
 // The app lives on hosts search engines may index (*.workers.dev, preview URLs), and it serves caregiver
 // profiles and contact data: keep every response out of search results until indexing is a deliberate decision.
 function withNoindex(response: Response): Response {
@@ -25,7 +28,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
 
   // The dictionaries feed autocomplete (one request per keystroke) and never read locals.user or locals.getRole:
   // skip the Supabase Auth round trip there. With no user, getRole below resolves to null.
-  if (context.url.pathname.startsWith("/api/dictionaries/")) {
+  if (NO_AUTH_ROUTES.has(context.url.pathname)) {
     context.locals.user = null;
   } else if (supabase) {
     const {
