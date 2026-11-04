@@ -267,23 +267,23 @@ Brak migracji i zmian schematu. Fixtury żyją tylko w transakcji `rollback`; te
 
 #### Automated
 
-- [x] 2.1 `supabase test db` uruchamia oba pliki i kończy się `Result: PASS`
-- [x] 2.2 Po przebiegu w lokalnej bazie nie ma gmin `9999%` ani użytkowników fixtur
+- [x] 2.1 `supabase test db` uruchamia oba pliki i kończy się `Result: PASS` — 65a5521
+- [x] 2.2 Po przebiegu w lokalnej bazie nie ma gmin `9999%` ani użytkowników fixtur — 65a5521
 
 #### Manual
 
-- [x] 2.3 Przegląd pliku: oczekiwana kolejność i listy braków są literalne, tie-breaker i granice stron mają osobne asercje
+- [x] 2.3 Przegląd pliku: oczekiwana kolejność i listy braków są literalne, tie-breaker i granice stron mają osobne asercje — 65a5521
 
 ### Phase 3: Kontrakt aplikacji w smoke
 
 #### Automated
 
-- [ ] 3.1 Świeży `npm run preview` i `npm run smoke` przechodzą, w tym nowy krok
-- [ ] 3.2 `npm run lint` przechodzi
+- [x] 3.1 Świeży `npm run preview` i `npm run smoke` przechodzą, w tym nowy krok
+- [x] 3.2 `npm run lint` przechodzi
 
 #### Manual
 
-- [ ] 3.3 Tymczasowe złamanie `sortAvailability` w mapowaniu powoduje czerwony nowy krok, po wycofaniu smoke zielony
+- [x] 3.3 Tymczasowe złamanie `sortAvailability` w mapowaniu powoduje czerwony nowy krok, po wycofaniu smoke zielony
 
 ### Phase 4: Bramka CI i dowód mutacjami
 

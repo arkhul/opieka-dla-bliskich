@@ -161,6 +161,14 @@ const hidesListContact = (text) =>
 // The first caregiver's contact as it could appear on its public profile page.
 const hidesProfileContact = (text) =>
   [contactEmail, "+48600100200", "600100200", "600 100 200"].every((secret) => !text.includes(secret));
+// One caregiver's card, from its name to the next card (or end of page): scopes a match-line assertion to a
+// single profile, since the local database collects cards from every smoke run.
+const cardFragment = (text, name) => {
+  const start = text.indexOf(name);
+  if (start === -1) return "";
+  const next = text.indexOf("<article", start);
+  return text.slice(start, next === -1 ? text.length : next);
+};
 
 const completeProfile = {
   displayName: "Anna Smoke",
@@ -736,6 +744,24 @@ const steps = [
     "caregiver list shows missing availability",
     () => request("/opiekunowie?gmina=1465011"),
     { status: 200, html: (text) => text.includes("Bartek Smoke") && text.includes("Dostępność nie podana") },
+  ],
+  [
+    "caregiver list orders missing terms canonically and hides full match for it",
+    // "Anna Smoke" has neither czw-noc nor pon-noc (textual order would put czw- before pon-; the app orders by
+    // weekday Pn...Nd) and offers only towarzystwo, so demencja is missing too: her card cannot be a full match.
+    () => request("/opiekunowie?gmina=1465011&usluga=towarzystwo&usluga=demencja&termin=czw-noc&termin=pon-noc"),
+    {
+      status: 200,
+      html: (text) => {
+        const card = cardFragment(text, "Anna Smoke");
+        return (
+          card !== "" &&
+          card.includes("Brakuje terminów: Pn, Cz: noc") &&
+          card.includes("Brakuje usług: Opieka nad osobą z demencją") &&
+          !card.includes("Pełne dopasowanie")
+        );
+      },
+    },
   ],
   [
     "caregiver list ignores malformed availability",
