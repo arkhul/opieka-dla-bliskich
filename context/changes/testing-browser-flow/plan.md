@@ -256,25 +256,25 @@ Brak zmian danych ani schematu. Rollback: usunięcie `e2e/`, `playwright.config.
 
 #### Automated
 
-- [x] 2.1 Test przepływu przechodzi na obu projektach: `npm run e2e`
-- [x] 2.2 Seed-test nadal przechodzi: `npm run e2e`
-- [x] 2.3 Lint przechodzi: `npm run lint`
-- [x] 2.4 Typy przechodzą: `npx astro check`
-- [x] 2.5 Smoke nadal zielony na tym samym preview i bazie: `npm run smoke`
+- [x] 2.1 Test przepływu przechodzi na obu projektach: `npm run e2e` — 9e1ac68
+- [x] 2.2 Seed-test nadal przechodzi: `npm run e2e` — 9e1ac68
+- [x] 2.3 Lint przechodzi: `npm run lint` — 9e1ac68
+- [x] 2.4 Typy przechodzą: `npx astro check` — 9e1ac68
+- [x] 2.5 Smoke nadal zielony na tym samym preview i bazie: `npm run smoke` — 9e1ac68
 
 #### Manual
 
-- [ ] 2.6 Przy `npx playwright test --headed` przepływ wygląda jak realna sesja koordynatora (wybór gminy, lista, logowanie, kontakt) — także na szerokości telefonu
-- [ ] 2.7 Powtórne uruchomienie testu (drugi przebieg na tej samej bazie) nadal przechodzi
+- [x] 2.6 Przy `npx playwright test --headed` przepływ wygląda jak realna sesja koordynatora (wybór gminy, lista, logowanie, kontakt) — także na szerokości telefonu — 9e1ac68
+- [x] 2.7 Powtórne uruchomienie testu (drugi przebieg na tej samej bazie) nadal przechodzi — 9e1ac68
 
 ### Phase 3: Bramka CI i dowód czułości
 
 #### Automated
 
-- [ ] 3.1 Lint i typy przechodzą: `npm run lint` oraz `npx astro check`
-- [ ] 3.2 Build przechodzi: `npm run build`
-- [ ] 3.3 Lokalnie e2e i smoke zielone: `npm run e2e` oraz `npm run smoke`
-- [ ] 3.4 Mutacje (a), (b), (c) dają czerwony `npm run e2e`, a po przywróceniu `git diff --stat src/` jest pusty i e2e zielony
+- [x] 3.1 Lint i typy przechodzą: `npm run lint` oraz `npx astro check`
+- [x] 3.2 Build przechodzi: `npm run build`
+- [x] 3.3 Lokalnie e2e i smoke zielone: `npm run e2e` oraz `npm run smoke`
+- [x] 3.4 Mutacje (a), (b), (c) dają czerwony `npm run e2e`, a po przywróceniu `git diff --stat src/` jest pusty i e2e zielony
 - [ ] 3.5 Workflow jest poprawny składniowo i zielony przebieg CI po pushu: `gh run watch`
 
 #### Manual

@@ -26,6 +26,10 @@ test("coordinator finds a caregiver, signs up with next, and sees contact", asyn
 
   await page.getByRole("button", { name: "Pokaż wyniki" }).click();
 
+  // The gmina island's hidden input must submit under the server's expected field name: a renamed
+  // input silently drops the filter from the GET query, which the card-content checks below wouldn't catch.
+  await expect(page).toHaveURL(new RegExp(`gmina=${caregiver.gmina.teryt}`));
+
   const card = page.getByRole("article").filter({ hasText: caregiver.displayName });
   await expect(card).toBeVisible();
   await expect(card.getByText(`Brakuje usług: ${caregiver.missingService.label}`)).toBeVisible();

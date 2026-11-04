@@ -65,7 +65,7 @@ schematu; orkiestrator aktualizuje Status, gdy na dysku pojawiają się artefakt
 | # | Phase name | Goal (one line) | Risks covered | Test types | Status | Change folder |
 |---|---|---|---|---|---|---|
 | 1 | Poprawność dopasowania | Dowieść twardego filtra gminy i kolejności rankingu na wyroczni wyprowadzonej z PRD, nie z kodu | #1, #2 | integration | done | testing-matching-correctness |
-| 2 | Krytyczny przepływ w przeglądarce | Dowieść, że koordynator w przeglądarce (desktop i telefon) dochodzi od filtra do kontaktu, a bez logowania kontaktu nie widzi; test jako bramka CI | #5 (widoczność #1, #3) | e2e, CI gate | not started | — |
+| 2 | Krytyczny przepływ w przeglądarce | Dowieść, że koordynator w przeglądarce (desktop i telefon) dochodzi od filtra do kontaktu, a bez logowania kontaktu nie widzi; test jako bramka CI | #5 (widoczność #1, #3) | e2e, CI gate | done | testing-browser-flow |
 | 3 | Granice kontaktu i zapisów | Zmapować istniejący smoke na #3, #4, #6 i domknąć luki tam, gdzie sprawdzenie nie wyłapałoby wycieku, nadużycia lub utraty danych | #3, #4, #6 | integration | not started | — |
 
 ## 4. Stack
@@ -82,7 +82,7 @@ Profil bazy testów: **sparse** — brak konfiguracji runnera (vitest/jest/playw
 | integracja SQL (pgTAP) | `supabase test db` na `supabase/tests/database/*.test.sql` | pgTAP 1.3.3, `pg_prove:3.36`, Supabase CLI 2.117.0 | Reguła dopasowania i rankingu (`search_caregivers()`); każdy plik w jednej transakcji z `rollback`, fixtury nie zostają w bazie |
 | uprawnienia bazy | `scripts/check-table-grants.sql` | Supabase CLI 2.117.0 (CI) | Blokuje tabele z domyślnymi uprawnieniami ALL |
 | unit | none yet | — | Nie planowany: logika dopasowania żyje w bazie, więc najtańszy realny sygnał to integracja (§3 Phase 1, pgTAP) |
-| e2e | none yet — see Phase 2 | — | Playwright jest kandydatem; wersję i konfigurację ugruntować w Phase 2 |
+| e2e | Playwright (`@playwright/test`) na `e2e/*.spec.ts` | `^1.64.1`, Node 22 | Dwa projekty (`desktop`, `mobile`) na jednym Chromium; `workers: 1` (fixtura zasiewa dane na tym samym preview/bazie) |
 | accessibility | none yet | — | Poza bieżącym wdrożeniem |
 
 **Stack grounding tools (current session):**
@@ -99,7 +99,7 @@ Profil bazy testów: **sparse** — brak konfiguracji runnera (vitest/jest/playw
 | uprawnienia tabel (`check-table-grants.sql`) | CI | required | tabele z domyślnymi uprawnieniami ALL |
 | smoke (integracja HTTP + baza) | CI | required | regresje auth, RLS, wyszukiwania, kontaktu, usuwania |
 | testy poprawności dopasowania (pgTAP) | CI | required | błędna gmina, błędna kolejność, nieprawdziwe oznaczenie braków |
-| e2e krytycznego przepływu | CI | required after §3 Phase 2 | zepsuty przepływ koordynatora w przeglądarce |
+| e2e krytycznego przepływu | CI | required | zepsuty przepływ koordynatora w przeglądarce |
 | smoke na wdrożonym Workerze | ręcznie po deployu | optional | różnice między lokalnym środowiskiem a produkcją |
 
 ## 6. Cookbook Patterns
@@ -124,7 +124,11 @@ ukończeniu odpowiedniego etapu; do tego czasu brzmi „TBD — see §3 Phase N�
 
 ### 6.3 Adding an e2e test
 
-- TBD — see §3 Phase 2 (wzorzec: jeden przepływ koordynatora od filtra do kontaktu, desktop i telefon).
+- **Location**: `e2e/*.spec.ts` (Playwright), konfiguracja w `playwright.config.ts`.
+- **Run locally**: `npm run e2e` (bez `BASE_URL` Playwright sam buduje i odpala `npm run preview` przez `scripts/preview-blocking.mjs`, bez `reuseExistingServer`); w CI `BASE_URL=http://localhost:4321 npm run e2e` w tym samym kroku co smoke, na tym samym już działającym preview.
+- **Convention**: fixtura (`e2e/fixtures.ts`) deklaruje oczekiwane dane (gmina, usługi, telefon, e-mail) i zasiewa je przez te same endpointy co `scripts/smoke.mjs` (`/api/auth/signup`, `PUT /api/caregiver/profile`) — nigdy nie odczytuje ich z powrotem z aplikacji, żeby uniknąć problemu wyroczni. Wąski ekran to projekt `mobile` w `playwright.config.ts` (sam viewport, bez emulacji dotyku), nie osobny test — ten sam plik `*.spec.ts` uruchamia się na obu projektach (`desktop`, `mobile`).
+- **Oracle**: oczekiwane wartości (etykieta gminy, usługa, brakująca usługa, telefon, e-mail) pochodzą z deklaracji fixtury w `e2e/fixtures.ts`, nie z odpowiedzi serwera.
+- **Sensitivity proof**: wzorzec dowodu mutacjami z §6.1 (zmienić realistyczny warunek w kodzie aplikacji, potwierdzić czerwony przebieg, przywrócić i potwierdzić zielony) — wynik w §6.5.
 
 ### 6.4 Adding a test for a new table or policy
 
@@ -133,6 +137,7 @@ ukończeniu odpowiedniego etapu; do tego czasu brzmi „TBD — see §3 Phase N�
 ### 6.5 Per-rollout-phase notes
 
 - **Phase 1 (Poprawność dopasowania, change `testing-matching-correctness`)**: dowiedzione pgTAP (`supabase/tests/database/search_caregivers_gmina.test.sql`, `search_caregivers_ranking.test.sql`), jeden krok smoke dla kontraktu kolejności braków na karcie, bramka CI (`supabase test db` w jobie `smoke`, po kontroli uprawnień tabel). Dowód mutacjami: 4 mutacje reguły (filtr gminy po prefiksie, pominięcie `g.active`, zamiana kolejności `matched_services`/`matched_slots`, usunięcie progu usług) dały czerwony `supabase test db`; po przywróceniu funkcji z migracji hash `pg_get_functiondef` identyczny i testy zielone.
+- **Phase 2 (Krytyczny przepływ w przeglądarce, change `testing-browser-flow`)**: Playwright (`e2e/coordinator-flow.spec.ts`, `e2e/seed.spec.ts`) na projektach `desktop`/`mobile`, bramka CI wymagana w jobie `smoke` po `npm run smoke`. Dowód mutacjami: (a) pominięcie `next` w przekierowaniu po rejestracji (`src/pages/api/auth/signup.ts`) — czerwony na `toHaveURL('/kontakt/<id>')` (lądowanie na `/`); (b) usunięcie `/kontakt` z `PROTECTED_ROUTES` (`src/middleware.ts`) — czerwony na przekierowaniu do `/auth/signin` (strona nie chroniona); (c) zmiana `name="gmina"` na `name="gmina_broken"` w ukrytym inpucie `GminaSelect.tsx` — niewidoczna dla reszty testu (karta i tak się pojawiała), więc dodano asercję `toHaveURL(/gmina=<teryt>/)` po submit, która dopiero złapała czerwony wynik (`gmina_broken=…` w query) i jest teraz częścią testu na trwałe; smoke HTTP nie widzi żadnej z tych trzech. Po przywróceniu każdej mutacji `git diff --stat src/` puste i `npm run e2e` zielony.
 
 ## 7. What We Deliberately Don't Test
 
@@ -146,6 +151,7 @@ Wywiad Q5 pominięty; wykluczenia poniżej wynikają z dokumentów i uwag kwesti
 
 - Strategy (§1–§5) last reviewed: 2026-11-04
 - Stack versions last verified: 2026-11-04
+- §3 Phase 2 closed, §4/§6.3 e2e layer added: 2026-11-04
 - AI-native tool references last verified: 2026-11-04
 - §3 Phase 1 closed, §4/§6.1 pgTAP layer added: 2026-11-04
 
