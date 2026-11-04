@@ -373,9 +373,9 @@ Migracja zmienia wyłącznie uprawnienia, bez danych i bez przestojów. Wycofani
 
 #### Automated
 
-- [x] 4.1 W przeglądzie F-01 nie ma już `Decision**: PENDING`
-- [x] 4.2 `npx prettier --check` przechodzi dla roadmapy i przeglądu F-01
+- [x] 4.1 W przeglądzie F-01 nie ma już `Decision**: PENDING` — ff423c9
+- [x] 4.2 `npx prettier --check` przechodzi dla roadmapy i przeglądu F-01 — ff423c9
 
 #### Manual
 
-- [x] 4.3 Backlog Handoff wskazuje S-04 i S-06 jako gotowe, S-05 jako czekające na S-04; notatka o przepływie PRD pod kamieniem milowym; `## Done` ma wpisy F-01, S-01…S-03
+- [x] 4.3 Backlog Handoff wskazuje S-04 i S-06 jako gotowe, S-05 jako czekające na S-04; notatka o przepływie PRD pod kamieniem milowym; `## Done` ma wpisy F-01, S-01…S-03 — ff423c9
