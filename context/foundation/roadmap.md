@@ -47,7 +47,7 @@ Rodzinny koordynator opieki — np. córka organizująca stałą opiekę dla mat
 | S-02 | public-caregiver-search        | każdy bez logowania przegląda listę opiekunów i filtruje ją po gminie i usłudze        | F-01, S-01    | US-01, FR-008, FR-009, FR-010             | done        |
 | S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | done        |
 | S-04 | caregiver-availability-filter  | opiekun ustawia dostępność (dni tygodnia × pory dnia), a koordynator po niej filtruje  | S-01, S-02    | FR-007, FR-011                            | done |
-| S-05 | ranked-match-results           | koordynator widzi wyniki uszeregowane według dopasowania, z oznaczeniem braków         | S-02, S-04    | US-01, FR-016                             | proposed |
+| S-05 | ranked-match-results           | koordynator widzi wyniki uszeregowane według dopasowania, z oznaczeniem braków         | S-02, S-04    | US-01, FR-016                             | done        |
 | S-06 | caregiver-profile-deletion     | opiekun trwale usuwa swój profil i znika on ze wszystkich wyników                      | S-01, S-02    | FR-003                                    | proposed |
 
 ## Streams
@@ -155,7 +155,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Czy plan Workers Free (10 ms CPU na żądanie) wystarczy, czy od razu przejść na Paid? Decyzja po pomiarze czasu CPU. — Owner: user. Block: no.
 - **Risk:** Reguła domenowa i wyróżnik produktu; musi liczyć się po stronie bazy, żeby zmieścić się w NFR „poniżej 1 sekundy” i nie przekroczyć limitu CPU Workera przy rosnącym katalogu.
-- **Status:** proposed
+- **Status:** done
 
 ### S-06: Trwałe usunięcie profilu opiekuna
 
@@ -213,3 +213,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 - **S-02: każdy — także bez logowania — przegląda listę opiekunów i zawęża ją po gminie i rodzaju usługi; widzi profile bez danych kontaktowych.** — Archived 2026-11-03 → `context/archive/2026-11-03-public-caregiver-search/`. Lesson: —.
 - **S-03: koordynator z listy przechodzi do profilu, zakłada konto lub loguje się i widzi dane kontaktowe opiekuna.** — Archived 2026-11-03 → `context/archive/2026-11-03-contact-reveal-after-signin/`. Lesson: —.
 - **S-04: opiekun ustawia swoją dostępność w dniach tygodnia i porach dnia, a koordynator zawęża listę po dostępności razem z gminą i usługą.** — Archived 2026-11-04 → `context/archive/2026-11-04-caregiver-availability-filter/`. Lesson: —.
+- **S-05: koordynator widzi listę posortowaną od profilu najpełniej pokrywającego potrzebę (gmina twardo, usługi ważą najwięcej, dostępność miękko), a przy każdym profilu widzi, czego w nim brakuje.** — Archived 2026-11-04 → `context/archive/2026-11-04-ranked-match-results/`. Lesson: —.
