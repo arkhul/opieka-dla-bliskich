@@ -46,7 +46,7 @@ Rodzinny koordynator opieki — np. córka organizująca stałą opiekę dla mat
 | S-01 | caregiver-profile-setup        | opiekun zakłada konto i publikuje profil z kontaktem, gminami i usługami               | F-01          | FR-001, FR-003, FR-004, FR-005, FR-006    | done |
 | S-02 | public-caregiver-search        | każdy bez logowania przegląda listę opiekunów i filtruje ją po gminie i usłudze        | F-01, S-01    | US-01, FR-008, FR-009, FR-010             | done        |
 | S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | done        |
-| S-04 | caregiver-availability-filter  | opiekun ustawia dostępność (dni tygodnia × pory dnia), a koordynator po niej filtruje  | S-01, S-02    | FR-007, FR-011                            | proposed |
+| S-04 | caregiver-availability-filter  | opiekun ustawia dostępność (dni tygodnia × pory dnia), a koordynator po niej filtruje  | S-01, S-02    | FR-007, FR-011                            | done |
 | S-05 | ranked-match-results           | koordynator widzi wyniki uszeregowane według dopasowania, z oznaczeniem braków         | S-02, S-04    | US-01, FR-016                             | proposed |
 | S-06 | caregiver-profile-deletion     | opiekun trwale usuwa swój profil i znika on ze wszystkich wyników                      | S-01, S-02    | FR-003                                    | proposed |
 
@@ -142,7 +142,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Jakie pory dnia rozróżniamy (np. rano / popołudnie / wieczór / noc)? — Owner: user. Block: no.
 - **Risk:** Wymiar dostępności przechodzi przez obie strony rynku naraz (edycja i filtr), więc dostarczamy go jako jeden pionowy wycinek; bez niego ranking z S-05 ma tylko jeden miękki wymiar.
-- **Status:** proposed
+- **Status:** done
 
 ### S-05: Wyniki uszeregowane według dopasowania
 
@@ -212,3 +212,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 - **S-01: opiekun zakłada konto, loguje się, uzupełnia dane kontaktowe, obsługiwane gminy i oferowane usługi, a następnie widzi swój profil.** — Archived 2026-11-03 → `context/archive/2026-11-03-caregiver-profile-setup/`. Lesson: —.
 - **S-02: każdy — także bez logowania — przegląda listę opiekunów i zawęża ją po gminie i rodzaju usługi; widzi profile bez danych kontaktowych.** — Archived 2026-11-03 → `context/archive/2026-11-03-public-caregiver-search/`. Lesson: —.
 - **S-03: koordynator z listy przechodzi do profilu, zakłada konto lub loguje się i widzi dane kontaktowe opiekuna.** — Archived 2026-11-03 → `context/archive/2026-11-03-contact-reveal-after-signin/`. Lesson: —.
+- **S-04: opiekun ustawia swoją dostępność w dniach tygodnia i porach dnia, a koordynator zawęża listę po dostępności razem z gminą i usługą.** — Archived 2026-11-04 → `context/archive/2026-11-04-caregiver-availability-filter/`. Lesson: —.
