@@ -279,23 +279,23 @@ Brak migracji i zmian schematu. Mutacje z fazy 5 robić tylko na lokalnej bazie 
 
 #### Automated
 
-- [x] 1.1 Nowy plik przechodzi razem z istniejącymi testami bazy: `supabase test db`
-- [x] 1.2 Kontrola uprawnień nadal zielona: `supabase db query --local -f scripts/check-table-grants.sql`
+- [x] 1.1 Nowy plik przechodzi razem z istniejącymi testami bazy: `supabase test db` — 2fa86e9
+- [x] 1.2 Kontrola uprawnień nadal zielona: `supabase db query --local -f scripts/check-table-grants.sql` — 2fa86e9
 
 #### Manual
 
-- [x] 1.3 Po przebiegu w bazie nie ma żadnych śladów fikstur (sanity transakcji wycofanej)
+- [x] 1.3 Po przebiegu w bazie nie ma żadnych śladów fikstur (sanity transakcji wycofanej) — 2fa86e9
 
 ### Phase 2: Macierz odmów zapisu z impersonacją (pgTAP)
 
 #### Automated
 
-- [ ] 2.1 Wszystkie pliki bazy zielone: `supabase test db`
-- [ ] 2.2 Pierwsza asercja pliku potwierdza działającą impersonację (`auth.uid()` = podany `sub`), widoczna w wyjściu `supabase test db`
+- [x] 2.1 Wszystkie pliki bazy zielone: `supabase test db`
+- [x] 2.2 Pierwsza asercja pliku potwierdza działającą impersonację (`auth.uid()` = podany `sub`), widoczna w wyjściu `supabase test db`
 
 #### Manual
 
-- [ ] 2.3 Po przebiegu w bazie brak gmin `9999%`, użytkowników `b0000000-…` i innych śladów fikstur
+- [x] 2.3 Po przebiegu w bazie brak gmin `9999%`, użytkowników `b0000000-…` i innych śladów fikstur
 
 ### Phase 3: Smoke — luki #3 i sondy #4
 
