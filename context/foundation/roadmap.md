@@ -48,7 +48,7 @@ Rodzinny koordynator opieki — np. córka organizująca stałą opiekę dla mat
 | S-03 | contact-reveal-after-signin    | koordynator zakłada konto i widzi dane kontaktowe opiekuna                             | S-01, S-02    | US-01, FR-002, FR-012                     | done        |
 | S-04 | caregiver-availability-filter  | opiekun ustawia dostępność (dni tygodnia × pory dnia), a koordynator po niej filtruje  | S-01, S-02    | FR-007, FR-011                            | done |
 | S-05 | ranked-match-results           | koordynator widzi wyniki uszeregowane według dopasowania, z oznaczeniem braków         | S-02, S-04    | US-01, FR-016                             | done        |
-| S-06 | caregiver-profile-deletion     | opiekun trwale usuwa swój profil i znika on ze wszystkich wyników                      | S-01, S-02    | FR-003                                    | proposed |
+| S-06 | caregiver-profile-deletion     | opiekun trwale usuwa swój profil i znika on ze wszystkich wyników                      | S-01, S-02    | FR-003                                    | done        |
 
 ## Streams
 
@@ -168,7 +168,7 @@ Foundations below assume these are present and do NOT re-scaffold them.
 - **Unknowns:**
   - Czy usunięcie profilu usuwa też konto logowania, czy tylko profil i kontakt? — Owner: user. Block: no.
 - **Risk:** Niezależny od ścieżki do north star, więc idzie równolegle; weryfikacja wymaga istniejącej listy (S-02), żeby potwierdzić, że profil znika z wyników.
-- **Status:** proposed
+- **Status:** done
 
 ## Backlog Handoff
 
@@ -214,3 +214,4 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 - **S-03: koordynator z listy przechodzi do profilu, zakłada konto lub loguje się i widzi dane kontaktowe opiekuna.** — Archived 2026-11-03 → `context/archive/2026-11-03-contact-reveal-after-signin/`. Lesson: —.
 - **S-04: opiekun ustawia swoją dostępność w dniach tygodnia i porach dnia, a koordynator zawęża listę po dostępności razem z gminą i usługą.** — Archived 2026-11-04 → `context/archive/2026-11-04-caregiver-availability-filter/`. Lesson: —.
 - **S-05: koordynator widzi listę posortowaną od profilu najpełniej pokrywającego potrzebę (gmina twardo, usługi ważą najwięcej, dostępność miękko), a przy każdym profilu widzi, czego w nim brakuje.** — Archived 2026-11-04 → `context/archive/2026-11-04-ranked-match-results/`. Lesson: —.
+- **S-06: opiekun trwale usuwa swój profil wraz z danymi kontaktowymi, a profil przestaje pojawiać się w jakichkolwiek wynikach.** — Archived 2026-11-04 → `context/archive/2026-11-04-caregiver-profile-deletion/`. Lesson: —.
