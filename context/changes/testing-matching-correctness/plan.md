@@ -278,20 +278,20 @@ Brak migracji i zmian schematu. Fixtury żyją tylko w transakcji `rollback`; te
 
 #### Automated
 
-- [x] 3.1 Świeży `npm run preview` i `npm run smoke` przechodzą, w tym nowy krok
-- [x] 3.2 `npm run lint` przechodzi
+- [x] 3.1 Świeży `npm run preview` i `npm run smoke` przechodzą, w tym nowy krok — b54c5f8
+- [x] 3.2 `npm run lint` przechodzi — b54c5f8
 
 #### Manual
 
-- [x] 3.3 Tymczasowe złamanie `sortAvailability` w mapowaniu powoduje czerwony nowy krok, po wycofaniu smoke zielony
+- [x] 3.3 Tymczasowe złamanie `sortAvailability` w mapowaniu powoduje czerwony nowy krok, po wycofaniu smoke zielony — b54c5f8
 
 ### Phase 4: Bramka CI i dowód mutacjami
 
 #### Automated
 
-- [ ] 4.1 `.github/workflows/ci.yml` zawiera krok `supabase test db` w jobie `smoke`
-- [ ] 4.2 `supabase test db` lokalnie zielone po przywróceniu funkcji, `pg_get_functiondef` bez zmian względem stanu przed mutacjami
-- [ ] 4.3 `npm run lint` przechodzi
+- [x] 4.1 `.github/workflows/ci.yml` zawiera krok `supabase test db` w jobie `smoke`
+- [x] 4.2 `supabase test db` lokalnie zielone po przywróceniu funkcji, `pg_get_functiondef` bez zmian względem stanu przed mutacjami
+- [x] 4.3 `npm run lint` przechodzi
 
 #### Manual
 

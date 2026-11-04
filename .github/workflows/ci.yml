@@ -54,6 +54,9 @@ jobs:
       # Fails if any public table, including ones added later, still has Supabase's default ALL grants (TRUNCATE etc.).
       - name: Check table grants
         run: supabase db query --local -f scripts/check-table-grants.sql
+      # pgTAP tests against search_caregivers(): gmina hard filter, ranking order, missing-service/slot markers.
+      - name: Run database tests
+        run: supabase test db
       - name: Configure secrets for build and preview
         run: |
           source supabase.env

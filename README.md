@@ -236,7 +236,7 @@ Smoke sprawdza też API profilu opiekuna (`GET`/`PUT /api/caregiver/profile`: br
 GitHub Actions runs two jobs on every push and PR to `master`:
 
 - **ci** — lint, `astro check` and build. Configure `SUPABASE_URL` and `SUPABASE_KEY` as repository secrets for the build step.
-- **smoke** — starts a local Supabase via the Supabase CLI, builds, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
+- **smoke** — starts a local Supabase via the Supabase CLI, checks table grants, runs the pgTAP tests under `supabase/tests/database/` (`supabase test db`), builds, serves the production preview on the Cloudflare runtime and runs `npm run smoke` against it. No secrets required.
 
 ## License
 
