@@ -363,19 +363,19 @@ Migracja zmienia wyłącznie uprawnienia, bez danych i bez przestojów. Wycofani
 
 #### Manual
 
-- [x] 3.1 `npx supabase db push` zastosował migrację uprawnień na produkcji
-- [x] 3.2 Kontrola uprawnień na produkcji zwraca te same 20 wierszy co lokalnie
-- [x] 3.3 Na produkcji `anon` dostaje `permission denied` dla zapisu do `gminas` i odczytu `caregiver_contacts`; nic nie zostaje zapisane
-- [x] 3.4 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
-- [x] 3.5 Na wdrożonym Workerze słowniki zwracają dane, a `/opiekunowie` renderuje listę z `X-Robots-Tag: noindex`
+- [x] 3.1 `npx supabase db push` zastosował migrację uprawnień na produkcji — 9ca6bea
+- [x] 3.2 Kontrola uprawnień na produkcji zwraca te same 20 wierszy co lokalnie — 9ca6bea
+- [x] 3.3 Na produkcji `anon` dostaje `permission denied` dla zapisu do `gminas` i odczytu `caregiver_contacts`; nic nie zostaje zapisane — 9ca6bea
+- [x] 3.4 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list` — 9ca6bea
+- [x] 3.5 Na wdrożonym Workerze słowniki zwracają dane, a `/opiekunowie` renderuje listę z `X-Robots-Tag: noindex` — 9ca6bea
 
 ### Phase 4: Dokumenty kontekstu
 
 #### Automated
 
-- [ ] 4.1 W przeglądzie F-01 nie ma już `Decision**: PENDING`
-- [ ] 4.2 `npx prettier --check` przechodzi dla roadmapy i przeglądu F-01
+- [x] 4.1 W przeglądzie F-01 nie ma już `Decision**: PENDING`
+- [x] 4.2 `npx prettier --check` przechodzi dla roadmapy i przeglądu F-01
 
 #### Manual
 
-- [ ] 4.3 Backlog Handoff wskazuje S-04 i S-06 jako gotowe, S-05 jako czekające na S-04; notatka o przepływie PRD pod kamieniem milowym; `## Done` ma wpisy F-01, S-01…S-03
+- [x] 4.3 Backlog Handoff wskazuje S-04 i S-06 jako gotowe, S-05 jako czekające na S-04; notatka o przepływie PRD pod kamieniem milowym; `## Done` ma wpisy F-01, S-01…S-03

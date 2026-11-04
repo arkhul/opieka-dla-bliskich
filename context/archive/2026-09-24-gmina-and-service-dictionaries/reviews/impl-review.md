@@ -47,7 +47,7 @@
   - Tradeoff: Rozszerza zamkniętą zmianę; projekt sync zależy od decyzji z F2 (usuwanie vs wycofywanie gmin).
   - Confidence: MEDIUM — zakres zależy od F2.
   - Blind spot: Zachowanie przy przyszłych FK z profili.
-- **Decision**: PENDING
+- **Decision**: FIXED (Fix A) — follow-up `gminas-generator-upsert` zrealizowany (tryb upsert/sync w generatorze, README opisuje odświeżanie); archiwum `context/archive/2026-09-24-gminas-generator-upsert/`
 
 ### F2 — Klucz `teryt` zawiera cyfrę rodzaju gminy, która zmienia się przy nadaniu praw miejskich
 
@@ -66,7 +66,7 @@
   - Tradeoff: Migracja zmieniająca PK na produkcji; kod przestaje być 1:1 z TERC; nadal potrzebne wycofywanie przy łączeniu/znoszeniu gmin.
   - Confidence: MEDIUM — w ramach RODZ 1/2/3 trójka WOJ+POW+GMI powinna być unikalna (np. Łowicz 1005011 vs 1005072), ale nie zweryfikowano tego na całym pliku TERC ani historii zmian.
   - Blind spot: Czy GUS przy nadaniu praw miejskich zachowuje GMI.
-- **Decision**: PENDING
+- **Decision**: FIXED (Fix A) — `supabase/migrations/20261103120000_retirable_gminas.sql` (wycofywanie gmin, `replaced_by`, `search_gminas` tylko po aktywnych); wymagania dla profili zapisane jako ograniczenia S-01 w `context/foundation/roadmap.md`
 
 ### F3 — Błędy bazy połykane bez logowania
 
@@ -76,7 +76,7 @@
 - **Location**: src/pages/api/dictionaries/gminas.ts:41, src/pages/api/dictionaries/services.ts:14
 - **Detail**: `catch { ... 500 }` odrzuca błąd, który serwis opakował komunikatem z bazy (`dictionary.service.ts:26,40`). Awaria na produkcji nie zostawia śladu w Workers Logs.
 - **Fix**: `catch (error) { console.error(error); ... }` w obu endpointach (odpowiedź do klienta bez zmian).
-- **Decision**: PENDING
+- **Decision**: FIXED — w `dictionaries-review-cleanup`: `console.error("Gmina search failed", error)` / `console.error("Services failed to load", error)` w catch `src/pages/api/dictionaries/gminas.ts` i `services.ts`, odpowiedź do klienta bez zmian; lint, astro check i build zielone (commit `f8933a0`)
 
 ### F4 — `grant select` nie czyni tabel tylko-do-odczytu
 
@@ -86,7 +86,7 @@
 - **Location**: supabase/migrations/20260924120000_create_dictionaries.sql:113-118
 - **Detail**: Komentarz mówi „read-only access for API roles”, ale domyślne uprawnienia Supabase w schemacie `public` dają `anon`/`authenticated` także INSERT/UPDATE/DELETE/TRUNCATE; zapisy blokuje wyłącznie RLS, a TRUNCATE nie podlega RLS (nieosiągalny przez PostgREST, ale to druga linia obrony).
 - **Fix**: Nowa migracja `revoke insert, update, delete, truncate on public.services, public.gminas from anon, authenticated;`.
-- **Decision**: PENDING
+- **Decision**: FIXED — w `dictionaries-review-cleanup`, zakres rozszerzony na wszystkie 7 tabel `public` (services, gminas, accounts, caregiver_profiles, caregiver_contacts, caregiver_gminas, caregiver_services): migracja `supabase/migrations/20261103230000_table_grants_mirror_policies.sql` (`revoke all` + jawne granty odpowiadające politykom) i reguła w AGENTS.md (Hard Rules). Sprawdzone: `has_table_privilege` lokalnie i na produkcji zwraca tę samą macierz 20 wierszy; nowe kroki smoke (anon POST `/rest/v1/gminas` → 401 permission denied, authenticated POST `/rest/v1/services` → 403 permission denied, odczyt `caregiver_contacts`/`accounts` przez anon → permission denied); na produkcji anon dostaje permission denied dla POST gminas i GET caregiver_contacts (commity `fdad6eb`, `9ca6bea`)
 
 ### F5 — Middleware woła `getUser()` przy każdym zapytaniu autocomplete
 
@@ -96,7 +96,7 @@
 - **Location**: src/middleware.ts:12
 - **Detail**: Dla zalogowanych użytkowników każde naciśnięcie klawisza w wyszukiwarce gmin (S-01/S-02) to dodatkowy round-trip do Supabase Auth. Dla anonimowych bez sesji koszt jest pomijalny. Cache'owanie odpowiedzi jest świadomie poza zakresem (plan: What We're NOT Doing).
 - **Fix**: Przy S-01/S-02 pominąć `getUser()` dla `/api/dictionaries/` w middleware.
-- **Decision**: PENDING
+- **Decision**: FIXED — w `dictionaries-review-cleanup`: `src/middleware.ts` pomija `getUser()` dla `/api/dictionaries/`; smoke zielony (commit `f8933a0`)
 
 ### F6 — README: sekcja smoke opisuje tylko przepływ auth
 
@@ -106,7 +106,7 @@
 - **Location**: README.md:58, README.md:195
 - **Detail**: Smoke od fazy 3 sprawdza też słowniki, a README nadal mówi, że testuje wyłącznie auth flow.
 - **Fix**: Dopisać kroki słownikowe do obu opisów smoke w README.
-- **Decision**: PENDING
+- **Decision**: FIXED — w `dictionaries-review-cleanup`: oba opisy smoke w README obejmują kroki słownikowe (commit `f8933a0`)
 
 ### F7 — Zmiana `normalize_pl` nie przeliczy zapisanej kolumny `search_name`
 
@@ -116,7 +116,7 @@
 - **Location**: supabase/migrations/20260924120000_create_dictionaries.sql:63
 - **Detail**: `search_name` to kolumna `generated ... stored` z funkcji użytkownika. Późniejsze `create or replace function normalize_pl` nie przeliczy istniejących wierszy, a wyszukiwanie będzie normalizować zapytanie nową wersją — ciche rozjechanie.
 - **Fix**: Przy kolejnej migracji dotykającej gmin dodać `comment on function normalize_pl` z ostrzeżeniem, że zmiana wymaga `update public.gminas set name = name`.
-- **Decision**: PENDING
+- **Decision**: FIXED — `comment on function public.normalize_pl` z ostrzeżeniem o `update public.gminas set name = name` w `supabase/migrations/20261103120000_retirable_gminas.sql:66-67`
 
 ### F8 — Smoke kończy się bez podsumowania przy błędzie sieci/JSON
 
@@ -126,4 +126,4 @@
 - **Location**: scripts/smoke.mjs:24-39
 - **Detail**: Odrzucony `fetch` (serwer nie wstał) lub niepoprawny JSON przy `content-type: application/json` daje nieobsłużony wyjątek zamiast czytelnego FAIL kroku.
 - **Fix**: Owinąć wykonanie kroku w try/catch i liczyć go jako FAIL.
-- **Decision**: PENDING
+- **Decision**: FIXED — w `dictionaries-review-cleanup`: try/catch wokół każdego kroku w `scripts/smoke.mjs`, wyjątek liczony jako FAIL kroku; sprawdzone: smoke przy zatrzymanym serwerze wypisuje linie FAIL i podsumowanie, exit 1 (commit `f8933a0`)

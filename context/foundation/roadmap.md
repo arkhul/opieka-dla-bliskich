@@ -3,7 +3,7 @@ project: "Opieka dla bliskich"
 version: 1
 status: draft
 created: 2026-09-24
-updated: 2026-11-03
+updated: 2026-11-04
 prd_version: 1
 main_goal: speed
 top_blocker: time
@@ -25,6 +25,7 @@ milestone_status: open
 - **Intent:** Na wdrożonej wersji działa pełny przepływ z głównego kryterium sukcesu PRD: opiekun publikuje profil, koordynator bez logowania filtruje i przegląda uszeregowane wyniki, a po założeniu konta widzi dane kontaktowe dopasowanej osoby.
 - **Source materials:** `context/foundation/prd.md` (v1)
 - **Done when:** every F-NN and S-NN below is `done`, a przepływ z PRD §Success Criteria → Primary (kroki 1–4) przechodzi na wdrożonym Workerze.
+  - 2026-11-03: przepływ PRD §Success Criteria → Primary (kroki 1–4) przeszedł na wdrożonym Workerze. M-1 pozostaje `open` do zakończenia S-04…S-06.
 - **Scope anchors:** wszystkie konieczne wymagania PRD — FR-001…FR-012, FR-016 — oraz US-01. Wymagania nice-to-have (FR-013, FR-014, FR-015) są poza tym kamieniem milowym (zob. `## Parked`).
 
 ## Vision recap
@@ -173,13 +174,13 @@ Foundations below assume these are present and do NOT re-scaffold them.
 
 | Roadmap ID | Change ID                      | Suggested issue title                                        | Ready for `/10x-plan` | Notes                                           |
 | ---------- | ------------------------------ | ------------------------------------------------------------ | --------------------- | ----------------------------------------------- |
-| F-01       | gmina-and-service-dictionaries | Słowniki gmin i usług jako wspólne listy wyboru              | yes                   | Run `/10x-plan gmina-and-service-dictionaries`  |
-| S-01       | caregiver-profile-setup        | Opiekun zakłada konto i publikuje profil                     | no                    | Czeka na F-01                                   |
-| S-02       | public-caregiver-search        | Publiczna lista opiekunów z filtrami gminy i usługi          | no                    | Czeka na F-01, S-01                             |
-| S-03       | contact-reveal-after-signin    | Koordynator widzi kontakt opiekuna po zalogowaniu            | no                    | Czeka na S-01, S-02; north star                 |
-| S-04       | caregiver-availability-filter  | Dostępność opiekuna i filtr po dostępności                   | no                    | Czeka na S-01, S-02                             |
-| S-05       | ranked-match-results           | Ranking wyników według dopasowania z oznaczeniem braków      | no                    | Czeka na S-02, S-04                             |
-| S-06       | caregiver-profile-deletion     | Opiekun trwale usuwa swój profil                             | no                    | Czeka na S-01, S-02                             |
+| F-01       | gmina-and-service-dictionaries | Słowniki gmin i usług jako wspólne listy wyboru              | done                  | Zarchiwizowane 2026-11-03                       |
+| S-01       | caregiver-profile-setup        | Opiekun zakłada konto i publikuje profil                     | done                  | Zarchiwizowane 2026-11-03                       |
+| S-02       | public-caregiver-search        | Publiczna lista opiekunów z filtrami gminy i usługi          | done                  | Zarchiwizowane 2026-11-03                       |
+| S-03       | contact-reveal-after-signin    | Koordynator widzi kontakt opiekuna po zalogowaniu            | done                  | Zarchiwizowane 2026-11-03                       |
+| S-04       | caregiver-availability-filter  | Dostępność opiekuna i filtr po dostępności                   | yes                   | Run `/10x-plan caregiver-availability-filter`   |
+| S-05       | ranked-match-results           | Ranking wyników według dopasowania z oznaczeniem braków      | no                    | Czeka na S-04                                   |
+| S-06       | caregiver-profile-deletion     | Opiekun trwale usuwa swój profil                             | yes                   | Run `/10x-plan caregiver-profile-deletion`      |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Include one row for every `F-NN` and `S-NN`. It should be compact enough to copy into issues, but it must not duplicate the detailed roadmap body.
 
@@ -206,8 +207,6 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 (Append-only. Carried forward verbatim into each successor milestone's roadmap; empty on the very first milestone.)
 
 ## Done
-
-(Empty on first generation. `/10x-archive` appends an entry here — and flips that item's `Status` to `done` — when a change whose `Change ID` matches the item is archived.)
 
 - **F-01: (foundation) słownik gmin i zamknięty katalog rodzajów usług są dostępne w aplikacji jako wspólne listy wyboru — tylko dane referencyjne, bez tabel profili.** — Archived 2026-11-03 → `context/archive/2026-09-24-gmina-and-service-dictionaries/`. Lesson: —.
 - **S-01: opiekun zakłada konto, loguje się, uzupełnia dane kontaktowe, obsługiwane gminy i oferowane usługi, a następnie widzi swój profil.** — Archived 2026-11-03 → `context/archive/2026-11-03-caregiver-profile-setup/`. Lesson: —.
