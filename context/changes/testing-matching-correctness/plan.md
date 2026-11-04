@@ -256,23 +256,23 @@ Brak migracji i zmian schematu. Fixtury żyją tylko w transakcji `rollback`; te
 
 #### Automated
 
-- [x] 1.1 `supabase test db` (bez argumentów) znajduje nowy plik i kończy się `Result: PASS`
-- [x] 1.2 Po przebiegu w lokalnej bazie nie ma gmin `9999%` ani użytkowników fixtur
+- [x] 1.1 `supabase test db` (bez argumentów) znajduje nowy plik i kończy się `Result: PASS` — 071b8e3
+- [x] 1.2 Po przebiegu w lokalnej bazie nie ma gmin `9999%` ani użytkowników fixtur — 071b8e3
 
 #### Manual
 
-- [x] 1.3 Przegląd pliku: każdy oczekiwany zbiór jest literalny i ma komentarz z regułą PRD/S-05, żaden nie jest wynikiem zapytania ani przepisaniem warunku z funkcji
+- [x] 1.3 Przegląd pliku: każdy oczekiwany zbiór jest literalny i ma komentarz z regułą PRD/S-05, żaden nie jest wynikiem zapytania ani przepisaniem warunku z funkcji — 071b8e3
 
 ### Phase 2: Ranking i oznaczenia braków (#2)
 
 #### Automated
 
-- [ ] 2.1 `supabase test db` uruchamia oba pliki i kończy się `Result: PASS`
-- [ ] 2.2 Po przebiegu w lokalnej bazie nie ma gmin `9999%` ani użytkowników fixtur
+- [x] 2.1 `supabase test db` uruchamia oba pliki i kończy się `Result: PASS`
+- [x] 2.2 Po przebiegu w lokalnej bazie nie ma gmin `9999%` ani użytkowników fixtur
 
 #### Manual
 
-- [ ] 2.3 Przegląd pliku: oczekiwana kolejność i listy braków są literalne, tie-breaker i granice stron mają osobne asercje
+- [x] 2.3 Przegląd pliku: oczekiwana kolejność i listy braków są literalne, tie-breaker i granice stron mają osobne asercje
 
 ### Phase 3: Kontrakt aplikacji w smoke
 
