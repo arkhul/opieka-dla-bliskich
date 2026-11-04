@@ -1,7 +1,7 @@
 ---
 change_id: ranked-match-results
 title: Ranked match results
-status: implemented
+status: impl_reviewed
 created: 2026-11-04
 updated: 2026-11-04
 archived_at: null
@@ -32,4 +32,10 @@ archived_at: null
 | C: gmina 2001052 + 1 usługa (pusty wynik + podpowiedzi) | 9 ms (8–12 ms) | 12 ms | 142–212 ms |
 
 - Limit planu Workers Free: 10 ms CPU na żądanie. Typowy czas już przy pustej liście jest na granicy limitu lub powyżej. Szczyty 47–74 ms wyglądają na start nowych izolatów. CPU idzie na SSR i sam Worker, nie na ranking w bazie (wariant C z dwoma RPC jest najtańszy).
-- **Decyzja (wstępna, 2026-11-04, user): przejść na Workers Paid przed wprowadzeniem prawdziwych profili.** Pełna strona (`CAREGIVER_PAGE_SIZE` = 20 kart) przekroczy limit Free. Warunek ponownego pomiaru: gdy któraś gmina ma ≥ 20 kompletnych profili. Samo przejście na Paid nie jest częścią tego planu.
+- **Decyzja (wstępna, 2026-11-04, user): przejść na Workers Paid przed wprowadzeniem prawdziwych profili.** Pełna strona (`CAREGIVER_PAGE_SIZE` = 20 kart) przekroczy limit Free. Warunek ponownego pomiaru: gdy któraś gmina ma ≥ 20 kompletnych profili. Przy tym samym pomiarze sprawdzić na produkcji wiersze dopasowania kart („Brakuje usług/terminów”, „Pełne dopasowanie”), których dziś nie dało się zobaczyć. Samo przejście na Paid nie jest częścią tego planu.
+
+### Wdrożenie poprawek z przeglądu implementacji (2026-11-04)
+
+- `npx supabase db push` zastosował tylko `20261104150000_search_ignores_unknown_selections.sql` (F4). Sprawdzone na produkcji: nowe ciała obu funkcji, `anon` ma `execute`, `public` nie, `count_caregivers_relaxed('2001052', '{nieznana}')` → `without_services = null`.
+- `npx wrangler deploy` z niezacommitowanego drzewa roboczego (poprawki F1, F3, F5 nad `6bc9016`): wersja `d1d395cd-bca1-48c2-8913-ad325efa7724`, 100% ruchu od 2026-11-04T13:32:59Z.
+- Po wdrożeniu: `/opiekunowie` = „Wyniki: 0”, `?termin=czw-noc` = „Nie ma jeszcze opiekunów z uzupełnionym profilem.” bez noty rankingu (F3), `?gmina=2001052&usluga=towarzystwo` = „Żaden opiekun…” z podpowiedziami usług i gminy (wyniki: 0).

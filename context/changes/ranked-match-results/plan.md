@@ -341,5 +341,5 @@ Migracja nie zmienia danych ani tabel; zmienia tylko kształt wyniku `search_car
 
 - [x] 3.1 `npx supabase db push` zastosował migrację na produkcji — 7c54796
 - [x] 3.2 `npx wrangler deploy` zakończony i widoczny w `wrangler deployments list` — 7c54796
-- [x] 3.3 Produkcja: liczba wyników bez filtrów bez zmian, karty z filtrami pokazują braki — 7c54796
+- [x] 3.3 Produkcja: liczba wyników bez filtrów bez zmian, karty z filtrami pokazują braki — 7c54796 (wiersze dopasowania tylko lokalnie — change.md Notes)
 - [x] 3.4 Czas CPU trzech wariantów i decyzja Free/Paid zapisane w `change.md` — 7c54796

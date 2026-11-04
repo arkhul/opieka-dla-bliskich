@@ -264,6 +264,9 @@ export async function countRelaxedCaregivers(
   }
 
   // The function always returns exactly one row.
+  if (data.length === 0) {
+    throw new Error("Failed to count relaxed caregivers: no row returned");
+  }
   const row = data[0];
   const toCount = (value: number | string | null) => (value === null ? null : Number(value));
   return { withoutServices: toCount(row.without_services), withoutGmina: toCount(row.without_gmina) };

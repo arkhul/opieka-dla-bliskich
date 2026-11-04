@@ -57,9 +57,15 @@ if (!supabase) {
     // Nothing matches: count what removing each single filter would give (one RPC), so the hint links are honest.
     // Slots never narrow the result, so removing them cannot help and gets no hint.
     if (total === 0 && (filter.teryt || filter.services.length > 0)) {
-      const relaxed = await countRelaxedCaregivers(supabase, filter);
-      withoutServices = relaxed.withoutServices;
-      withoutGmina = relaxed.withoutGmina;
+      // Hints are optional: if counting fails, still show the empty result, just without hint links.
+      try {
+        const relaxed = await countRelaxedCaregivers(supabase, filter);
+        withoutServices = relaxed.withoutServices;
+        withoutGmina = relaxed.withoutGmina;
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error("Caregiver list relax hints failed", error);
+      }
       if (withoutServices !== null) {
         hints.push({
           text: "Usuń filtr usług",
@@ -84,6 +90,8 @@ if (!supabase) {
 }
 
 const hasFilters = filter.teryt !== null || filter.services.length > 0 || filter.availability.length > 0;
+// Slots never narrow the result, so with only slots selected an empty list means no complete profiles at all.
+const narrowsResult = filter.teryt !== null || filter.services.length > 0;
 const totalPages = Math.max(1, Math.ceil(total / CAREGIVER_PAGE_SIZE));
 const pageOutOfRange = total > 0 && caregivers.length === 0;
 // Only another gmina can help: dropping the gmina filter finds someone, dropping the service filter does not.
@@ -211,17 +219,17 @@ const buttonClass =
 
           <section class="space-y-4">
             <h2 class="text-lg font-semibold">Wyniki: {total}</h2>
-            {isRanked && (
+            {isRanked && caregivers.length > 0 && (
               <p class="text-sm text-blue-100/70">
                 Najpierw opiekunowie pokrywający najwięcej wybranych usług, potem terminów.
               </p>
             )}
 
-            {total === 0 && !hasFilters && (
+            {total === 0 && !narrowsResult && (
               <p class="text-blue-100/80">Nie ma jeszcze opiekunów z uzupełnionym profilem.</p>
             )}
 
-            {total === 0 && hasFilters && (
+            {total === 0 && narrowsResult && (
               <div class="space-y-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm">
                 <p class="text-blue-50">Żaden opiekun nie spełnia wybranych warunków.</p>
                 <ul class="space-y-1">
