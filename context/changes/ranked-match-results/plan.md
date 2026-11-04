@@ -308,32 +308,32 @@ Migracja nie zmienia danych ani tabel; zmienia tylko kształt wyniku `search_car
 
 #### Automated
 
-- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset`
-- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error`
-- [x] 1.3 Kontrola grantów przechodzi: `npx supabase db query --local -f scripts/check-table-grants.sql`
-- [x] 1.4 Lint i typy: `npm run lint` i `npx astro check`
-- [x] 1.5 Smoke przechodzi z nowymi krokami bazy: `npm run smoke`
+- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset` — 470479a
+- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error` — 470479a
+- [x] 1.3 Kontrola grantów przechodzi: `npx supabase db query --local -f scripts/check-table-grants.sql` — 470479a
+- [x] 1.4 Lint i typy: `npm run lint` i `npx astro check` — 470479a
+- [x] 1.5 Smoke przechodzi z nowymi krokami bazy: `npm run smoke` — 470479a
 
 #### Manual
 
-- [x] 1.6 psql: grupy pokrycia w kolejności (2,·) → (1,·), w grupie więcej terminów wyżej
-- [x] 1.7 `explain analyze` z 13 usługami i 28 terminami poniżej 50 ms lokalnie
-- [x] 1.8 `count_caregivers_relaxed('2001052', '{towarzystwo}')` zwraca jeden wiersz `0, N` z N > 0
+- [x] 1.6 psql: grupy pokrycia w kolejności (2,·) → (1,·), w grupie więcej terminów wyżej — 470479a
+- [x] 1.7 `explain analyze` z 13 usługami i 28 terminami poniżej 50 ms lokalnie — 470479a
+- [x] 1.8 `count_caregivers_relaxed('2001052', '{towarzystwo}')` zwraca jeden wiersz `0, N` z N > 0 — 470479a
 
 ### Phase 2: Lista pokazuje ranking i braki
 
 #### Automated
 
-- [ ] 2.1 Lint i typy: `npm run lint` i `npx astro check`
-- [ ] 2.2 Build: `npm run build`
-- [ ] 2.3 Smoke przechodzi z krokami stron: `npm run smoke`
+- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check`
+- [x] 2.2 Build: `npm run build`
+- [x] 2.3 Smoke przechodzi z krokami stron: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.4 Gmina + 2 usługi + 2 terminy: kolejność od pełnego dopasowania, braki na każdej karcie, profil bez dostępności niżej
-- [ ] 2.5 Bez usług i terminów: kolejność jak przed zmianą, bez wiersza dopasowania
-- [ ] 2.6 Pusty wynik: podpowiedzi z prawdziwymi liczbami, jedno wywołanie `count_caregivers_relaxed`
-- [ ] 2.7 375 px: karty z wierszem braków bez przewijania w poziomie
+- [x] 2.4 Gmina + 2 usługi + 2 terminy: kolejność od pełnego dopasowania, braki na każdej karcie, profil bez dostępności niżej
+- [x] 2.5 Bez usług i terminów: kolejność jak przed zmianą, bez wiersza dopasowania
+- [x] 2.6 Pusty wynik: podpowiedzi z prawdziwymi liczbami, jedno wywołanie `count_caregivers_relaxed`
+- [x] 2.7 375 px: karty z wierszem braków bez przewijania w poziomie
 
 ### Phase 3: Wdrożenie produkcyjne i pomiar CPU
 

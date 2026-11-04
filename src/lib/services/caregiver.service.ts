@@ -8,6 +8,8 @@ import type {
   GminaKind,
   OwnCaregiverProfileDto,
   PublicCaregiverDto,
+  RankedCaregiverDto,
+  RelaxedCaregiverCounts,
   SaveCaregiverProfileCommand,
   ServiceDto,
 } from "@/types";
@@ -162,8 +164,20 @@ interface PublicRow {
   availability: string[];
 }
 
+// search_caregivers() adds the match columns: how many selected services/slots the profile has, and which it lacks
+// (missing_services as [{slug, label}] in sort_order, missing_slots ordered by slot text; both empty when none).
 interface SearchRow extends PublicRow {
+  matched_services: number;
+  missing_services: ServiceDto[];
+  matched_slots: number;
+  missing_slots: string[];
   total_count: number | string;
+}
+
+// One row of count_caregivers_relaxed(); bigint may arrive as a number or as text, null = filter not selected.
+interface RelaxedCountsRow {
+  without_services: number | string | null;
+  without_gmina: number | string | null;
 }
 
 function toPublicCaregiver(row: PublicRow): PublicCaregiverDto {
@@ -184,9 +198,19 @@ function toPublicCaregiver(row: PublicRow): PublicCaregiverDto {
   };
 }
 
+function toRankedCaregiver(row: SearchRow): RankedCaregiverDto {
+  return {
+    ...toPublicCaregiver(row),
+    match: {
+      missingServices: row.missing_services.map(({ slug, label }) => ({ slug, label })),
+      missingAvailability: sortAvailability(row.missing_slots),
+    },
+  };
+}
+
 async function runSearch(supabase: SupabaseClient, filter: CaregiverSearchFilter, limit: number, offset: number) {
-  // Without generated DB types the rpc result is untyped; the filter semantics live in SQL
-  // (an empty p_availability means no availability filter).
+  // Without generated DB types the rpc result is untyped; the filter and ranking semantics live in SQL
+  // (slots never narrow the result, they only set the order).
   const { data, error } = (await supabase.rpc("search_caregivers", {
     p_teryt: filter.teryt,
     p_services: filter.services,
@@ -214,14 +238,35 @@ export async function searchCaregivers(
   supabase: SupabaseClient,
   filter: CaregiverSearchFilter,
   page: number,
-): Promise<{ caregivers: PublicCaregiverDto[]; total: number }> {
+): Promise<{ caregivers: RankedCaregiverDto[]; total: number }> {
   const rows = await runSearch(supabase, filter, CAREGIVER_PAGE_SIZE, (page - 1) * CAREGIVER_PAGE_SIZE);
 
   if (rows.length === 0) {
     return { caregivers: [], total: page > 1 ? await countCaregivers(supabase, filter) : 0 };
   }
 
-  return { caregivers: rows.map(toPublicCaregiver), total: Number(rows[0].total_count) };
+  return { caregivers: rows.map(toRankedCaregiver), total: Number(rows[0].total_count) };
+}
+
+// Empty-result hint counts in one call: matches without the service filter and without the gmina filter
+// (null where that filter was not selected). Slots are not sent: they never narrow the result.
+export async function countRelaxedCaregivers(
+  supabase: SupabaseClient,
+  filter: CaregiverSearchFilter,
+): Promise<RelaxedCaregiverCounts> {
+  const { data, error } = (await supabase.rpc("count_caregivers_relaxed", {
+    p_teryt: filter.teryt,
+    p_services: filter.services,
+  })) as PostgrestSingleResponse<RelaxedCountsRow[]>;
+
+  if (error) {
+    throw new Error(`Failed to count relaxed caregivers: ${error.message}`);
+  }
+
+  // The function always returns exactly one row.
+  const row = data[0];
+  const toCount = (value: number | string | null) => (value === null ? null : Number(value));
+  return { withoutServices: toCount(row.without_services), withoutGmina: toCount(row.without_gmina) };
 }
 
 // One public profile (the same visibility rule as the list), or null when it does not exist or is incomplete.

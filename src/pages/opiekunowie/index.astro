@@ -5,10 +5,10 @@ import { GminaSelect } from "@/components/search/GminaSelect";
 import Layout from "@/layouts/Layout.astro";
 import { summarizeAvailability } from "@/lib/availability";
 import { buildCaregiverSearchHref, CAREGIVER_LIST_PATH, parseCaregiverSearch } from "@/lib/caregiver-search";
-import { CAREGIVER_PAGE_SIZE, countCaregivers, searchCaregivers } from "@/lib/services/caregiver.service";
+import { CAREGIVER_PAGE_SIZE, countRelaxedCaregivers, searchCaregivers } from "@/lib/services/caregiver.service";
 import { getActiveGmina, listServices } from "@/lib/services/dictionary.service";
 import { createClient } from "@/lib/supabase";
-import type { CaregiverSearchFilter, GminaDto, PublicCaregiverDto, ServiceDto } from "@/types";
+import type { CaregiverSearchFilter, GminaDto, RankedCaregiverDto, ServiceDto } from "@/types";
 
 // The page is public and holds no contact data, but the Topbar shows the signed-in user's e-mail.
 Astro.response.headers.set("Cache-Control", "private, no-store");
@@ -28,9 +28,11 @@ let filter: CaregiverSearchFilter = { teryt: null, services: [], availability: [
 let page = 1;
 let selectedGmina: GminaDto | null = null;
 let gminaNotice: string | null = null;
-let caregivers: PublicCaregiverDto[] = [];
+let caregivers: RankedCaregiverDto[] = [];
 let total = 0;
-let hints: RelaxHint[] = [];
+const hints: RelaxHint[] = [];
+let withoutServices: number | null = null;
+let withoutGmina: number | null = null;
 
 if (!supabase) {
   pageError = "Supabase nie jest skonfigurowany — lista jest niedostępna.";
@@ -52,25 +54,26 @@ if (!supabase) {
 
     ({ caregivers, total } = await searchCaregivers(supabase, filter, page));
 
-    // Nothing matches: count what removing each single filter would give, so the hint links are honest.
-    if (total === 0 && (filter.teryt || filter.services.length > 0 || filter.availability.length > 0)) {
-      const candidates: { text: string; relaxed: CaregiverSearchFilter }[] = [];
-      if (filter.services.length > 0) {
-        candidates.push({ text: "Usuń filtr usług", relaxed: { ...filter, services: [] } });
+    // Nothing matches: count what removing each single filter would give (one RPC), so the hint links are honest.
+    // Slots never narrow the result, so removing them cannot help and gets no hint.
+    if (total === 0 && (filter.teryt || filter.services.length > 0)) {
+      const relaxed = await countRelaxedCaregivers(supabase, filter);
+      withoutServices = relaxed.withoutServices;
+      withoutGmina = relaxed.withoutGmina;
+      if (withoutServices !== null) {
+        hints.push({
+          text: "Usuń filtr usług",
+          href: buildCaregiverSearchHref({ ...filter, services: [] }),
+          count: withoutServices,
+        });
       }
-      if (filter.availability.length > 0) {
-        candidates.push({ text: "Usuń filtr dostępności", relaxed: { ...filter, availability: [] } });
+      if (withoutGmina !== null) {
+        hints.push({
+          text: "Usuń filtr gminy",
+          href: buildCaregiverSearchHref({ ...filter, teryt: null }),
+          count: withoutGmina,
+        });
       }
-      if (filter.teryt) {
-        candidates.push({ text: "Usuń filtr gminy", relaxed: { ...filter, teryt: null } });
-      }
-      hints = await Promise.all(
-        candidates.map(async ({ text, relaxed }) => ({
-          text,
-          href: buildCaregiverSearchHref(relaxed),
-          count: await countCaregivers(supabase, relaxed),
-        })),
-      );
     }
   } catch (error) {
     // Server-side only: the visitor gets the generic message, the cause stays in the Worker logs.
@@ -83,10 +86,10 @@ if (!supabase) {
 const hasFilters = filter.teryt !== null || filter.services.length > 0 || filter.availability.length > 0;
 const totalPages = Math.max(1, Math.ceil(total / CAREGIVER_PAGE_SIZE));
 const pageOutOfRange = total > 0 && caregivers.length === 0;
-// Only another gmina can help: dropping the gmina filter finds someone, dropping any other single filter does not.
-const gminaHint = filter.teryt !== null ? hints.find((hint) => hint.text === "Usuń filtr gminy") : undefined;
-const noNeighbourHint =
-  gminaHint !== undefined && gminaHint.count > 0 && hints.every((hint) => hint === gminaHint || hint.count === 0);
+// Only another gmina can help: dropping the gmina filter finds someone, dropping the service filter does not.
+const neighbourHint = withoutGmina !== null && withoutGmina > 0 && (withoutServices === null || withoutServices === 0);
+// The match line and the ranking note appear only when something sets the order.
+const isRanked = filter.services.length > 0 || filter.availability.length > 0;
 const selectedServices = services.filter((service) => filter.services.includes(service.slug));
 const availabilitySummary = summarizeAvailability(filter.availability);
 
@@ -133,7 +136,7 @@ const buttonClass =
 
             <fieldset class="min-w-0">
               <legend class="mb-2 text-sm font-medium text-blue-100/80">
-                Rodzaj usług (opiekun musi oferować wszystkie wybrane)
+                Rodzaj usług (wyżej opiekunowie oferujący więcej wybranych; musi pasować co najmniej jedna)
               </legend>
               <div class="grid gap-2 sm:grid-cols-2">
                 {services.map((service) => (
@@ -153,7 +156,7 @@ const buttonClass =
 
             <fieldset class="min-w-0">
               <legend class="mb-2 text-sm font-medium text-blue-100/80">
-                Dostępność (opiekun musi mieć co najmniej jeden z zaznaczonych terminów)
+                Dostępność (wyżej opiekunowie z większą liczbą zaznaczonych terminów)
               </legend>
               <AvailabilityGrid selected={filter.availability} name="termin" />
             </fieldset>
@@ -208,6 +211,11 @@ const buttonClass =
 
           <section class="space-y-4">
             <h2 class="text-lg font-semibold">Wyniki: {total}</h2>
+            {isRanked && (
+              <p class="text-sm text-blue-100/70">
+                Najpierw opiekunowie pokrywający najwięcej wybranych usług, potem terminów.
+              </p>
+            )}
 
             {total === 0 && !hasFilters && (
               <p class="text-blue-100/80">Nie ma jeszcze opiekunów z uzupełnionym profilem.</p>
@@ -215,7 +223,7 @@ const buttonClass =
 
             {total === 0 && hasFilters && (
               <div class="space-y-2 rounded-lg border border-white/10 bg-white/5 px-4 py-3 text-sm">
-                <p class="text-blue-50">Żaden opiekun nie spełnia wszystkich wybranych warunków.</p>
+                <p class="text-blue-50">Żaden opiekun nie spełnia wybranych warunków.</p>
                 <ul class="space-y-1">
                   {hints.map((hint) => (
                     <li>
@@ -225,7 +233,7 @@ const buttonClass =
                     </li>
                   ))}
                 </ul>
-                {noNeighbourHint && <p class="text-blue-100/70">Spróbuj sąsiedniej gminy.</p>}
+                {neighbourHint && <p class="text-blue-100/70">Spróbuj sąsiedniej gminy.</p>}
               </div>
             )}
 
@@ -245,6 +253,9 @@ const buttonClass =
                   const shown = gminas.slice(0, MAX_GMINA_LABELS);
                   const hidden = gminas.length - shown.length;
                   const availability = summarizeAvailability(caregiver.availability);
+                  const { missingServices, missingAvailability } = caregiver.match;
+                  const missingSlots = summarizeAvailability(missingAvailability);
+                  const fullMatch = missingServices.length === 0 && missingAvailability.length === 0;
                   return (
                     <li>
                       <article class="min-w-0 space-y-3 rounded-2xl border border-white/10 bg-white/10 p-4 backdrop-blur-xl sm:p-5">
@@ -274,6 +285,22 @@ const buttonClass =
                         <p class="text-sm break-words text-blue-100/70">
                           {availability ? `Dostępność: ${availability}` : "Dostępność nie podana"}
                         </p>
+                        {isRanked && (
+                          <div
+                            class:list={[
+                              "space-y-1 rounded-lg border px-3 py-2 text-sm break-words",
+                              fullMatch
+                                ? "border-emerald-400/30 bg-emerald-900/30 text-emerald-200"
+                                : "border-amber-400/30 bg-amber-900/30 text-amber-200",
+                            ]}
+                          >
+                            {fullMatch && <p>Pełne dopasowanie</p>}
+                            {missingServices.length > 0 && (
+                              <p>Brakuje usług: {missingServices.map((service) => service.label).join(", ")}</p>
+                            )}
+                            {missingSlots && <p>Brakuje terminów: {missingSlots}</p>}
+                          </div>
+                        )}
                       </article>
                     </li>
                   );

@@ -11,7 +11,8 @@
 // by anon and writes to the dictionaries fail with "permission denied" before RLS is even consulted.
 // Caregiver availability (caregiver_availability) is public to read, written only by its owner through save_caregiver_profile(),
 // and never hides a profile from the search. On the pages: the list filter (termin), the availability line on cards,
-// the relax hints and the grid on the public profile page.
+// the match line on cards (missing services and slots, full match first), the relax hints and the grid on the
+// public profile page.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -688,9 +689,33 @@ const steps = [
         text.includes("Anna Smoke") &&
         text.includes("Pn–Pt: rano · Sb: noc") &&
         text.includes("Bartek Smoke") &&
+        text.includes("Brakuje terminów: Cz: noc") &&
         !text.includes("Usuń filtr dostępności") &&
         hidesListContact(text),
     },
+  ],
+  [
+    "caregiver list marks full matches first",
+    // "Anna Smoke" has pon-rano (full match); profiles without it rank lower and show what they miss.
+    () => request("/opiekunowie?gmina=1465011&termin=pon-rano"),
+    {
+      status: 200,
+      html: (text) => {
+        const firstFull = text.indexOf("Pełne dopasowanie");
+        const firstMissing = text.indexOf("Brakuje terminów");
+        return (
+          text.includes("Anna Smoke") &&
+          firstFull !== -1 &&
+          (firstMissing === -1 || firstFull < firstMissing) &&
+          hidesListContact(text)
+        );
+      },
+    },
+  ],
+  [
+    "caregiver list names missing services",
+    () => request("/opiekunowie?gmina=1465011&usluga=towarzystwo&usluga=demencja"),
+    { status: 200, html: (text) => text.includes("Brakuje usług: Opieka nad osobą z demencją") },
   ],
   [
     "caregiver list shows missing availability",
@@ -708,7 +733,10 @@ const steps = [
     () => request("/opiekunowie?gmina=2001052&usluga=towarzystwo"),
     {
       status: 200,
-      html: (text) => text.includes("Usuń filtr gminy (wyniki:") && text.includes("Spróbuj sąsiedniej gminy"),
+      html: (text) =>
+        text.includes("Usuń filtr usług (wyniki: 0)") &&
+        text.includes("Usuń filtr gminy (wyniki:") &&
+        text.includes("Spróbuj sąsiedniej gminy"),
     },
   ],
   [
