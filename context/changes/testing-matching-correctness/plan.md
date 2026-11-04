@@ -289,12 +289,12 @@ Brak migracji i zmian schematu. Fixtury żyją tylko w transakcji `rollback`; te
 
 #### Automated
 
-- [x] 4.1 `.github/workflows/ci.yml` zawiera krok `supabase test db` w jobie `smoke`
-- [x] 4.2 `supabase test db` lokalnie zielone po przywróceniu funkcji, `pg_get_functiondef` bez zmian względem stanu przed mutacjami
-- [x] 4.3 `npm run lint` przechodzi
+- [x] 4.1 `.github/workflows/ci.yml` zawiera krok `supabase test db` w jobie `smoke` — 3de3bdd
+- [x] 4.2 `supabase test db` lokalnie zielone po przywróceniu funkcji, `pg_get_functiondef` bez zmian względem stanu przed mutacjami — 3de3bdd
+- [x] 4.3 `npm run lint` przechodzi — 3de3bdd
 
 #### Manual
 
-- [ ] 4.4 Raport mutacji: każda z ≥4 mutacji dała czerwony `supabase test db`, po przywróceniu zielone
-- [ ] 4.5 Job `smoke` w CI dla brancha z PR przechodzi, log kroku zawiera `Result: PASS`
-- [ ] 4.6 `test-plan.md`, `AGENTS.md` i `README.md` opisują nową warstwę zgodnie z faktycznym stanem
+- [x] 4.4 Raport mutacji: każda z ≥4 mutacji dała czerwony `supabase test db`, po przywróceniu zielone — 3de3bdd
+- [x] 4.5 Job `smoke` w CI dla brancha z PR przechodzi, log kroku zawiera `Result: PASS` — 3de3bdd
+- [x] 4.6 `test-plan.md`, `AGENTS.md` i `README.md` opisują nową warstwę zgodnie z faktycznym stanem — 3de3bdd
