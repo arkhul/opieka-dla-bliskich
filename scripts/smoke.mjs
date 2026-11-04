@@ -6,6 +6,8 @@
 // close the path from the list to a revealed phone number, including a new coordinator signing up with a return address.
 // Table privileges are checked too: anon and authenticated get only the explicit grants, so reads of contacts and roles
 // by anon and writes to the dictionaries fail with "permission denied" before RLS is even consulted.
+// Caregiver availability (caregiver_availability) is public to read, written only by its owner through save_caregiver_profile(),
+// and the search availability filter matches profiles with at least one selected slot.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -107,6 +109,13 @@ const getPublicCaregiver = (id) =>
   supabase("/rest/v1/rpc/get_public_caregiver", { method: "POST", json: { p_caregiver_id: id } });
 const listsCaregiver = (json) => Array.isArray(json) && json.some((row) => row.user_id === caregiverId);
 const hidesCaregiver = (json) => Array.isArray(json) && !json.some((row) => row.user_id === caregiverId);
+const findSecondCaregiver = (json) =>
+  Array.isArray(json) ? json.find((row) => row.user_id === secondCaregiverId) : undefined;
+// Same availability slots regardless of order (SQL orders by slot text; the app sets the canonical order).
+const sameSlots = (actual, expected) =>
+  Array.isArray(actual) &&
+  actual.length === expected.length &&
+  [...actual].sort().join() === [...expected].sort().join();
 const CONTACT_KEYS = ["phone", "email", "caregiver_contacts"];
 const hasNoindex = (headers) => (headers.get("x-robots-tag") ?? "").includes("noindex");
 
@@ -120,6 +129,16 @@ const completeProfile = {
   email: contactEmail,
   gminas: ["1465011"],
   services: ["towarzystwo"],
+};
+
+// Second caregiver's profile, saved straight through the RPC in the previous 6-parameter shape (no p_availability).
+const secondCaregiverProfile = {
+  p_display_name: "Bartek Smoke",
+  p_description: null,
+  p_phone: "+48600100300",
+  p_email: null,
+  p_gminas: ["1465011"],
+  p_services: ["towarzystwo"],
 };
 
 const steps = [
@@ -362,16 +381,100 @@ const steps = [
       supabase("/rest/v1/rpc/save_caregiver_profile", {
         method: "POST",
         token: secondCaregiverToken,
-        json: {
-          p_display_name: "Bartek Smoke",
-          p_description: null,
-          p_phone: "+48600100300",
-          p_email: null,
-          p_gminas: ["1465011"],
-          p_services: ["towarzystwo"],
-        },
+        json: { ...secondCaregiverProfile, p_availability: ["sr-noc", "nd-wieczor"] },
       }),
     { status: 204 },
+  ],
+  // Availability straight against Supabase: public to read, written only by its owner, validated by
+  // save_caregiver_profile(), and the search filter is OR (at least one selected slot).
+  [
+    "anon reads caregiver availability",
+    () => supabase(`/rest/v1/caregiver_availability?caregiver_id=eq.${secondCaregiverId}`),
+    { status: 200, body: (json) => Array.isArray(json) && json.length === 2 },
+  ],
+  [
+    "anon cannot write caregiver availability",
+    () =>
+      supabase("/rest/v1/caregiver_availability", {
+        method: "POST",
+        json: { caregiver_id: secondCaregiverId, slot: "pon-rano" },
+      }),
+    { status: 401, body: deniesTable("caregiver_availability") },
+  ],
+  [
+    "caregiver cannot write another caregiver's availability",
+    () =>
+      supabase("/rest/v1/caregiver_availability", {
+        method: "POST",
+        token: secondCaregiverToken,
+        json: { caregiver_id: caregiverId, slot: "pon-rano" },
+      }),
+    // 403 with the RLS message: the grant allows insert, the policy rejects someone else's caregiver_id.
+    {
+      status: 403,
+      body: (json) => json?.code === "42501" && String(json.message).includes("row-level security"),
+    },
+  ],
+  [
+    "profile save rejects unknown availability slot",
+    () =>
+      supabase("/rest/v1/rpc/save_caregiver_profile", {
+        method: "POST",
+        token: secondCaregiverToken,
+        json: { ...secondCaregiverProfile, p_availability: ["pon-swit"] },
+      }),
+    { status: 400, body: (json) => String(json?.message).includes("Nieznane terminy dostępności") },
+  ],
+  [
+    "search matches any selected slot",
+    () => searchCaregivers({ p_teryt: "1465011", p_availability: ["sr-noc", "czw-noc"], p_limit: 50 }),
+    {
+      status: 200,
+      body: (json) =>
+        sameSlots(findSecondCaregiver(json)?.availability, ["nd-wieczor", "sr-noc"]) && hidesCaregiver(json),
+    },
+  ],
+  [
+    "search hides profile without matching slot",
+    () => searchCaregivers({ p_teryt: "1465011", p_availability: ["czw-noc"], p_limit: 50 }),
+    { status: 200, body: (json) => Array.isArray(json) && findSecondCaregiver(json) === undefined },
+  ],
+  [
+    "public caregiver returns availability",
+    () => getPublicCaregiver(secondCaregiverId),
+    {
+      status: 200,
+      body: (json) =>
+        hasOneRow(json) &&
+        sameSlots(json[0].availability, ["nd-wieczor", "sr-noc"]) &&
+        CONTACT_KEYS.every((key) => !(key in json[0])),
+    },
+  ],
+  [
+    "profile save without availability clears it",
+    // The previous 6-parameter shape (what the old Worker sends): the default '{}' clears the availability.
+    () =>
+      supabase("/rest/v1/rpc/save_caregiver_profile", {
+        method: "POST",
+        token: secondCaregiverToken,
+        json: secondCaregiverProfile,
+      }),
+    { status: 204 },
+  ],
+  [
+    "search without availability filter keeps profile without availability",
+    async () => {
+      const unfiltered = await searchCaregivers({ p_teryt: "1465011", p_limit: 50 });
+      const filtered = await searchCaregivers({ p_teryt: "1465011", p_availability: ["sr-noc"], p_limit: 50 });
+      const ok =
+        unfiltered.status === 200 &&
+        isEmptyArray(findSecondCaregiver(unfiltered.json)?.availability) &&
+        filtered.status === 200 &&
+        Array.isArray(filtered.json) &&
+        findSecondCaregiver(filtered.json) === undefined;
+      return { ...unfiltered, json: { ok, unfiltered: unfiltered.json, filtered: filtered.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
   ],
   [
     "second caregiver cannot read first caregiver contact",
