@@ -167,8 +167,13 @@ select is_empty(
 
 -- p_teryt = null -> {A, B, C, D, H}: completeness alone decides; E (no gminas), F (only retired R)
 -- and I (no phone) stay excluded even without any gmina filter.
+-- Unfiltered search is paginated (default 20, max 50) and the local database also holds profiles from
+-- smoke runs, so the fixtures can sit beyond page 1: read pages 0..450 in steps of 50 instead.
 select set_eq(
-  $$select user_id from public.search_caregivers(p_teryt := null) where user_id in (
+  $$select s.user_id
+      from generate_series(0, 450, 50) as o(off)
+      cross join lateral public.search_caregivers(p_teryt := null, p_limit := 50, p_offset := o.off) s
+     where s.user_id in (
       'a0000000-0000-0000-0000-000000000001', 'a0000000-0000-0000-0000-000000000002',
       'a0000000-0000-0000-0000-000000000003', 'a0000000-0000-0000-0000-000000000004',
       'a0000000-0000-0000-0000-000000000005', 'a0000000-0000-0000-0000-000000000006',
