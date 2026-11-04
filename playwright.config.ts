@@ -11,6 +11,9 @@ export default defineConfig({
   retries: 0,
   // Coordinator flow seeds data through the same preview/database; parallel workers would race on it.
   workers: 1,
+  // CI: the HTML report (with traces and screenshots) is what the failure-only artifact upload in ci.yml ships;
+  // the default CI reporter ("dot") writes no playwright-report/ at all.
+  reporter: process.env.CI ? [["dot"], ["html", { open: "never" }]] : "list",
   use: {
     baseURL,
     trace: "retain-on-failure",
@@ -30,6 +33,9 @@ export default defineConfig({
   ...(process.env.BASE_URL
     ? {}
     : {
+        // On Windows Playwright kills the wrapper with taskkill /F, so its SIGTERM handler never runs;
+        // this stops the detached preview daemon instead of leaving a stale build on :4321.
+        globalTeardown: "./e2e/global-teardown.ts",
         webServer: {
           // See scripts/preview-blocking.mjs: `astro preview` daemonizes and exits once
           // it confirms the server is up, which this wrapper absorbs so the spawned

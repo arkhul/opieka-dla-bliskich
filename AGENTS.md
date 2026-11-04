@@ -33,4 +33,5 @@ Setup and the full script list: @README.md.
 ## Testing & CI
 
 - There is no unit test suite. `npm run smoke` is the integration/HTTP test. `supabase/tests/database/` holds pgTAP tests of SQL matching/ranking functions (e.g. `search_caregivers()`), run via `supabase test db` on a local Supabase instance (CI job `smoke`, after the table-grants check). Each test runs in one transaction with `rollback`, so fixtures never persist. `npm run smoke` needs Supabase with email confirmation disabled.
-- Before pushing, run `npm run lint`, `npx astro check`, `npm run build` and, if Supabase is running locally, `supabase test db`. CI steps: @.github/workflows/ci.yml.
+- `npm run e2e` runs the Playwright browser test of the coordinator flow (`e2e/`, projects `desktop` and `mobile`; CI job `smoke`, required). Locally it builds and starts its own preview on :4321 (stopping any stale one) and needs the same local Supabase as smoke. How to add a test: @context/foundation/test-plan.md §6.3.
+- Before pushing, run `npm run lint`, `npx astro check`, `npm run build` and, if Supabase is running locally, `supabase test db` and `npm run e2e`. CI steps: @.github/workflows/ci.yml.

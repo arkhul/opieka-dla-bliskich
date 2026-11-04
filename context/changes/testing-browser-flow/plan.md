@@ -282,3 +282,8 @@ Brak zmian danych ani schematu. Rollback: usunięcie `e2e/`, `playwright.config.
 - [x] 3.6 W przebiegu CI krok e2e jest widoczny jako osobny, wymagany krok i trwa akceptowalnie (zanotuj czas instalacji Chromium i samego testu) — 82215ab
 - [x] 3.7 Umyślnie zepsuty test w gałęzi roboczej daje czerwony job i artefakt raportu (opcjonalnie, jednorazowo) — 82215ab
 - [x] 3.8 `test-plan.md` jest spójny: Phase 2 `done`, §5 „required", §6.3 wypełniona — 82215ab
+
+## Addendum (impl-review, 2026-11-04)
+
+- Phase 1 odchylenie: `webServer.command` to `node scripts/preview-blocking.mjs`, nie goły build + `npm run preview`. `astro preview` demonizuje się i kończy, więc wrapper utrzymuje proces dla Playwrighta. Na starcie wywołuje `astro preview stop`, więc nieaktualny preview jest zatrzymywany (nie ma błędu zajętego portu, jak w kryterium 1.7); cel — nie testować starego buildu — jest spełniony. Teardown: `e2e/global-teardown.ts` (handlery sygnałów nie działają na Windows).
+- Phase 3: dodany `reporter` html w CI (`playwright.config.ts`), bez niego `playwright-report/` nie powstaje i artefakt przy błędzie był pusty. Pozycja 3.7 wymaga jednorazowej weryfikacji umyślnie czerwonym przebiegiem w CI.
