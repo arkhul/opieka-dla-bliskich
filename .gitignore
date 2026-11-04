@@ -29,3 +29,8 @@ pnpm-debug.log*
 
 # supabase studio sql editor snippets (local only)
 supabase/snippets/
+
+# playwright
+test-results/
+playwright-report/
+blob-report/
