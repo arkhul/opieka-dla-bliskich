@@ -192,7 +192,10 @@ export const DELETE: APIRoute = async (context) => {
       return json({ error: "Nie masz profilu do usunięcia." }, 404);
     }
     return json({ deleted: true });
-  } catch {
+  } catch (error) {
+    // Server-side only: the client gets the generic message, the cause stays in the Worker logs.
+    // eslint-disable-next-line no-console
+    console.error("Caregiver profile delete failed", error);
     return json({ error: "Nie udało się usunąć profilu." }, 500);
   }
 };

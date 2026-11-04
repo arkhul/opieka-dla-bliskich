@@ -69,6 +69,7 @@ Migracja pozwala właścicielowi usunąć swój profil przez RLS. Smoke dowodzi 
 
 - Nowe konto `smoke-caregiver4-${stamp}@example.com` (zmienne `deletableCaregiverId`, `deletableCaregiverToken`) zakładane przez `/auth/v1/signup` z `role: "caregiver"`, jak drugi opiekun (`:396-403`). Kompletny profil „Dorota Smoke” zapisany przez RPC `save_caregiver_profile` (telefon, gmina `1465011`, co najmniej jedna usługa i jeden termin).
 - Kroki, w tej kolejności, dodane po krokach dostępności (przed sekcją stron):
+  > **Addendum (impl-review F1):** kroki stoją po krokach RLS koordynatora (`scripts/smoke.mjs:873`), a nie po krokach dostępności, bo `coordinatorToken` jest ustawiany dopiero tam (`:844`).
   - „deletable profile is listed”: `search_caregivers` z `p_teryt: "1465011", p_limit: 50` (jak w istniejących krokach) jako anon zawiera `deletableCaregiverId`.
   - „anon cannot delete a caregiver profile”: `DELETE /rest/v1/caregiver_profiles?user_id=eq.<id>` bez tokenu → 401, `deniesTable("caregiver_profiles")`.
   - „other caregiver cannot delete a profile”: ten sam `DELETE` z `secondCaregiverToken` i `Prefer: return=representation` → 200 z pustą tablicą. Potem `get_public_caregiver(<id>)` nadal ma jeden wiersz.
@@ -133,6 +134,8 @@ Opiekun usuwa profil z `/profil` przez okno dialogowe, a endpoint `DELETE /api/c
 - `Dialog` z `@/components/ui/dialog` i `Button` z `@/components/ui/button`. Wyzwalacz: przycisk „Usuń profil” w wariancie destrukcyjnym albo obrysowanym na czerwono. Tytuł: „Usunąć profil na zawsze?”. Opis: profil, dane kontaktowe, gminy, usługi i dostępność zostaną trwale usunięte, koordynatorzy przestaną widzieć profil, tej operacji nie można cofnąć, konto logowania zostaje i można później założyć nowy profil. Przyciski: „Anuluj” (zamyka) i „Usuń na zawsze”.
 - Potwierdzenie: `fetch("/api/caregiver/profile", { method: "DELETE" })`. Podczas żądania oba przyciski są nieaktywne, a przycisk potwierdzenia ma tekst „Usuwanie…”. 200 → `window.location.assign("/profil?usunieto=1")`. 404 → `window.location.assign("/profil")` (profil zniknął już wcześniej, np. w innej karcie). 401 → `window.location.assign("/auth/signin")`. Inny status albo błąd sieci → komunikat w oknie (`error` z odpowiedzi albo „Nie udało się usunąć profilu. Spróbuj ponownie.”) przez `ServerError` z `@/components/auth/ServerError` i odblokowane przyciski.
 - Warunkowe klasy przez `cn()`.
+
+> **Addendum (impl-review F2):** poza kontraktem dodano: blokadę zamknięcia okna (Esc, X, tło) podczas żądania, ikonę `Trash2` na wyzwalaczu i spinner przy „Usuwanie…” oraz akapit wyjaśniający w sekcji „Usuwanie profilu” na `/profil`.
 
 #### 4. Strona profilu
 
