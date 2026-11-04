@@ -1,7 +1,7 @@
 ---
 change_id: testing-browser-flow
 title: E2E krytycznego przepływu koordynatora w przeglądarce
-status: implementing
+status: implemented
 created: 2026-11-04
 updated: 2026-11-04
 archived_at: null

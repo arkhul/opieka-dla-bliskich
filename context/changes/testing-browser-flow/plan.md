@@ -279,6 +279,6 @@ Brak zmian danych ani schematu. Rollback: usunięcie `e2e/`, `playwright.config.
 
 #### Manual
 
-- [x] 3.6 W przebiegu CI krok e2e jest widoczny jako osobny, wymagany krok i trwa akceptowalnie (zanotuj czas instalacji Chromium i samego testu)
-- [x] 3.7 Umyślnie zepsuty test w gałęzi roboczej daje czerwony job i artefakt raportu (opcjonalnie, jednorazowo)
-- [x] 3.8 `test-plan.md` jest spójny: Phase 2 `done`, §5 „required", §6.3 wypełniona
+- [x] 3.6 W przebiegu CI krok e2e jest widoczny jako osobny, wymagany krok i trwa akceptowalnie (zanotuj czas instalacji Chromium i samego testu) — 82215ab
+- [x] 3.7 Umyślnie zepsuty test w gałęzi roboczej daje czerwony job i artefakt raportu (opcjonalnie, jednorazowo) — 82215ab
+- [x] 3.8 `test-plan.md` jest spójny: Phase 2 `done`, §5 „required", §6.3 wypełniona — 82215ab
