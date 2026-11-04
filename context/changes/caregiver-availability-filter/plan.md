@@ -422,22 +422,22 @@ Migracja nie zmienia danych: istniejące profile dostają pustą dostępność i
 
 #### Automated
 
-- [x] 3.1 Lint i typy: `npm run lint` i `npx astro check`
-- [x] 3.2 Build: `npm run build`
-- [x] 3.3 Smoke przechodzi z krokami stron: `npm run smoke`
+- [x] 3.1 Lint i typy: `npm run lint` i `npx astro check` — bf1f8db
+- [x] 3.2 Build: `npm run build` — bf1f8db
+- [x] 3.3 Smoke przechodzi z krokami stron: `npm run smoke` — bf1f8db
 
 #### Manual
 
-- [x] 3.4 Filtr „Pn rano” + „Śr rano” działa w trybie OR, URL ma `termin=…`, chip zdejmuje tylko dostępność
-- [x] 3.5 Pusty wynik z filtrem dostępności pokazuje „Usuń filtr dostępności (wyniki: N)”
-- [x] 3.6 Karty pokazują linię dostępności albo „Dostępność nie podana”, strony profilu pokazują siatkę
-- [x] 3.7 Filtr, chipy i karty są czytelne na 375 px
+- [x] 3.4 Filtr „Pn rano” + „Śr rano” działa w trybie OR, URL ma `termin=…`, chip zdejmuje tylko dostępność — bf1f8db
+- [x] 3.5 Pusty wynik z filtrem dostępności pokazuje „Usuń filtr dostępności (wyniki: N)” — bf1f8db
+- [x] 3.6 Karty pokazują linię dostępności albo „Dostępność nie podana”, strony profilu pokazują siatkę — bf1f8db
+- [x] 3.7 Filtr, chipy i karty są czytelne na 375 px — bf1f8db
 
 ### Phase 4: Wdrożenie produkcyjne
 
 #### Manual
 
-- [ ] 4.1 `npx supabase db push` zastosował migrację dostępności na produkcji
-- [ ] 4.2 Na produkcji macierz ma 24 wiersze, a anon dostaje `permission denied` przy zapisie do `caregiver_availability`
-- [ ] 4.3 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
-- [ ] 4.4 Na wdrożonym Workerze filtr i linia dostępności działają, a liczba wyników bez filtrów się nie zmieniła
+- [x] 4.1 `npx supabase db push` zastosował migrację dostępności na produkcji
+- [x] 4.2 Na produkcji macierz ma 24 wiersze, a anon dostaje `permission denied` przy zapisie do `caregiver_availability`
+- [x] 4.3 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
+- [x] 4.4 Na wdrożonym Workerze filtr i linia dostępności działają, a liczba wyników bez filtrów się nie zmieniła
