@@ -109,4 +109,4 @@ Notes:
 - Fixed: F1 (Fix A), F2 (Fix A), F3, F4, F5
 - Accepted: F6 (queued for S-05)
 - Verification after fixes: `npm run lint`, `npx astro check`, `npm run build`, `npx supabase db lint --level error`, `check-table-grants.sql` and `npm run smoke` (fresh preview) all pass. F2 was checked in HTML: an empty gmina with `termin=pon-rano` shows the neighbour hint (8 results without the gmina filter); with `termin=czw-noc` (0 results without it) the hint is hidden.
-- Pending: production `db push` of `20261104130000_save_profile_keeps_availability.sql` and a Worker deploy (`follow-ups/review-fixes.md`).
+- Production: migration `20261104130000_…` pushed and Worker deployed (version f51d9a5a), verified without writing data.
