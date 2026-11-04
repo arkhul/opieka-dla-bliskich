@@ -324,22 +324,22 @@ Migracja nie zmienia danych ani tabel; zmienia tylko kształt wyniku `search_car
 
 #### Automated
 
-- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check`
-- [x] 2.2 Build: `npm run build`
-- [x] 2.3 Smoke przechodzi z krokami stron: `npm run smoke`
+- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check` — d26bd53
+- [x] 2.2 Build: `npm run build` — d26bd53
+- [x] 2.3 Smoke przechodzi z krokami stron: `npm run smoke` — d26bd53
 
 #### Manual
 
-- [x] 2.4 Gmina + 2 usługi + 2 terminy: kolejność od pełnego dopasowania, braki na każdej karcie, profil bez dostępności niżej
-- [x] 2.5 Bez usług i terminów: kolejność jak przed zmianą, bez wiersza dopasowania
-- [x] 2.6 Pusty wynik: podpowiedzi z prawdziwymi liczbami, jedno wywołanie `count_caregivers_relaxed`
-- [x] 2.7 375 px: karty z wierszem braków bez przewijania w poziomie
+- [x] 2.4 Gmina + 2 usługi + 2 terminy: kolejność od pełnego dopasowania, braki na każdej karcie, profil bez dostępności niżej — d26bd53
+- [x] 2.5 Bez usług i terminów: kolejność jak przed zmianą, bez wiersza dopasowania — d26bd53
+- [x] 2.6 Pusty wynik: podpowiedzi z prawdziwymi liczbami, jedno wywołanie `count_caregivers_relaxed` — d26bd53
+- [x] 2.7 375 px: karty z wierszem braków bez przewijania w poziomie — d26bd53
 
 ### Phase 3: Wdrożenie produkcyjne i pomiar CPU
 
 #### Manual
 
-- [ ] 3.1 `npx supabase db push` zastosował migrację na produkcji
-- [ ] 3.2 `npx wrangler deploy` zakończony i widoczny w `wrangler deployments list`
-- [ ] 3.3 Produkcja: liczba wyników bez filtrów bez zmian, karty z filtrami pokazują braki
-- [ ] 3.4 Czas CPU trzech wariantów i decyzja Free/Paid zapisane w `change.md`
+- [x] 3.1 `npx supabase db push` zastosował migrację na produkcji
+- [x] 3.2 `npx wrangler deploy` zakończony i widoczny w `wrangler deployments list`
+- [x] 3.3 Produkcja: liczba wyników bez filtrów bez zmian, karty z filtrami pokazują braki
+- [x] 3.4 Czas CPU trzech wariantów i decyzja Free/Paid zapisane w `change.md`
