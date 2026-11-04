@@ -5,6 +5,6 @@ import { expect, test } from "@playwright/test";
 test("caregiver list renders the results heading and the filter form", async ({ page }) => {
   await page.goto("/opiekunowie");
 
-  await expect(page.getByRole("heading", { name: /^Wyniki: \d+$/ })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "CELOWO ZEPSUTE" })).toBeVisible({ timeout: 2_000 });
   await expect(page.getByRole("button", { name: "Pokaż wyniki" })).toBeVisible();
 });
