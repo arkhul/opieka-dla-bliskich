@@ -13,6 +13,9 @@
 // and never hides a profile from the search. On the pages: the list filter (termin), the availability line on cards,
 // the match line on cards (missing services and slots, full match first), the relax hints and the grid on the
 // public profile page.
+// Profile deletion (caregiver_profiles delete policy): only the owner deletes their profile (anon has no privilege,
+// another caregiver and a coordinator delete nothing), the foreign key cascade clears the contact, gminas, services
+// and availability, and the profile is gone from search_caregivers and get_public_caregiver at once.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -29,6 +32,8 @@ const coordinatorEmail = `smoke-coordinator-${stamp}@example.com`;
 const secondCaregiverEmail = `smoke-caregiver2-${stamp}@example.com`;
 const thirdCaregiverEmail = `smoke-caregiver3-${stamp}@example.com`;
 const secondCoordinatorEmail = `smoke-coordinator2-${stamp}@example.com`;
+// Fourth caregiver: a complete profile that the REST steps delete, so the profiles of other steps stay untouched.
+const deletableCaregiverEmail = `smoke-caregiver4-${stamp}@example.com`;
 // Contact e-mail of the first caregiver: differs from the login e-mail, so absence checks look for the real value.
 const contactEmail = `kontakt-${stamp}@example.com`;
 const password = "Smoke-Test-Passw0rd!";
@@ -42,6 +47,9 @@ let secondCaregiverId = "";
 // Third caregiver: saves a profile without a phone, so it stays incomplete.
 let incompleteCaregiverId = "";
 let incompleteCaregiverToken = "";
+// Fourth caregiver: its profile is deleted by its owner.
+let deletableCaregiverId = "";
+let deletableCaregiverToken = "";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -86,13 +94,15 @@ async function request(path, { method = "GET", form, json } = {}) {
 }
 
 // Direct call to Supabase (PostgREST or Auth), bypassing the app: as anon, or as a user when a token is given.
-async function supabase(path, { method = "GET", token, json } = {}) {
+// prefer: PostgREST Prefer header, e.g. "return=representation" to get the deleted rows back.
+async function supabase(path, { method = "GET", token, json, prefer } = {}) {
   const response = await fetch(SUPABASE_URL + path, {
     method,
     headers: {
       apikey: SUPABASE_KEY,
       Authorization: `Bearer ${token ?? SUPABASE_KEY}`,
       ...(json ? { "Content-Type": "application/json" } : {}),
+      ...(prefer ? { Prefer: prefer } : {}),
     },
     body: json ? JSON.stringify(json) : undefined,
   });
@@ -848,6 +858,131 @@ const steps = [
         json: { user_id: coordinatorId, display_name: "Koordynator Smoke" },
       }),
     { status: 403 },
+  ],
+  // Profile deletion, straight against Supabase, on a separate fourth caregiver ("Dorota Smoke"), so the profiles
+  // used by other steps stay. Here and not next to the availability steps: coordinatorToken is known only from here.
+  [
+    "fourth caregiver gets Supabase access token",
+    async () => {
+      const result = await supabase("/auth/v1/signup", {
+        method: "POST",
+        json: { email: deletableCaregiverEmail, password, data: { role: "caregiver" } },
+      });
+      deletableCaregiverToken = result.json?.access_token ?? "";
+      deletableCaregiverId = result.json?.user?.id ?? "";
+      return result;
+    },
+    { status: 200, body: (json) => typeof json.access_token === "string" && typeof json.user?.id === "string" },
+  ],
+  [
+    "fourth caregiver saves complete profile",
+    () =>
+      supabase("/rest/v1/rpc/save_caregiver_profile", {
+        method: "POST",
+        token: deletableCaregiverToken,
+        json: {
+          p_display_name: "Dorota Smoke",
+          p_description: null,
+          p_phone: "+48600100400",
+          p_email: `kontakt4-${stamp}@example.com`,
+          p_gminas: ["1465011"],
+          p_services: ["towarzystwo"],
+          p_availability: ["pon-rano"],
+        },
+      }),
+    { status: 204 },
+  ],
+  [
+    "deletable profile is listed",
+    () => searchCaregivers({ p_teryt: "1465011", p_limit: 50 }),
+    {
+      status: 200,
+      // With its availability, so the cascade step below proves that rows existed and are gone.
+      body: (json) =>
+        Array.isArray(json) &&
+        sameSlots(json.find((row) => row.user_id === deletableCaregiverId)?.availability, ["pon-rano"]),
+    },
+  ],
+  [
+    "anon cannot delete a caregiver profile",
+    () => supabase(`/rest/v1/caregiver_profiles?user_id=eq.${deletableCaregiverId}`, { method: "DELETE" }),
+    { status: 401, body: deniesTable("caregiver_profiles") },
+  ],
+  [
+    "other caregiver cannot delete a profile",
+    // RLS: someone else's row is not visible to the delete policy, so PostgREST deletes 0 rows instead of failing.
+    async () => {
+      const deleted = await supabase(`/rest/v1/caregiver_profiles?user_id=eq.${deletableCaregiverId}`, {
+        method: "DELETE",
+        token: secondCaregiverToken,
+        prefer: "return=representation",
+      });
+      const kept = await getPublicCaregiver(deletableCaregiverId);
+      const ok = deleted.status === 200 && isEmptyArray(deleted.json) && kept.status === 200 && hasOneRow(kept.json);
+      return { ...deleted, json: { ok, deleted: deleted.json, kept: kept.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
+  ],
+  [
+    "coordinator cannot delete a profile",
+    async () => {
+      const deleted = await supabase(`/rest/v1/caregiver_profiles?user_id=eq.${deletableCaregiverId}`, {
+        method: "DELETE",
+        token: coordinatorToken,
+        prefer: "return=representation",
+      });
+      const kept = await getPublicCaregiver(deletableCaregiverId);
+      const ok = deleted.status === 200 && isEmptyArray(deleted.json) && kept.status === 200 && hasOneRow(kept.json);
+      return { ...deleted, json: { ok, deleted: deleted.json, kept: kept.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
+  ],
+  [
+    "caregiver deletes own profile",
+    () =>
+      supabase(`/rest/v1/caregiver_profiles?user_id=eq.${deletableCaregiverId}`, {
+        method: "DELETE",
+        token: deletableCaregiverToken,
+        prefer: "return=representation",
+      }),
+    { status: 200, body: (json) => hasOneRow(json) && json[0].user_id === deletableCaregiverId },
+  ],
+  [
+    "deleted profile leaves no data",
+    // The contact is read with the owner's token (anon has no privilege on it); the public lists and the profile as anon.
+    async () => {
+      const contact = await supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${deletableCaregiverId}`, {
+        token: deletableCaregiverToken,
+      });
+      const publicRows = await Promise.all([
+        supabase(`/rest/v1/caregiver_gminas?caregiver_id=eq.${deletableCaregiverId}`),
+        supabase(`/rest/v1/caregiver_services?caregiver_id=eq.${deletableCaregiverId}`),
+        supabase(`/rest/v1/caregiver_availability?caregiver_id=eq.${deletableCaregiverId}`),
+        supabase(`/rest/v1/caregiver_profiles?user_id=eq.${deletableCaregiverId}`),
+      ]);
+      const all = [contact, ...publicRows];
+      const ok = all.every((result) => result.status === 200 && isEmptyArray(result.json));
+      return {
+        ...contact,
+        json: { ok, results: all.map((result) => ({ status: result.status, json: result.json })) },
+      };
+    },
+    { status: 200, body: (json) => json.ok === true },
+  ],
+  [
+    "deleted profile is gone from search",
+    async () => {
+      const listed = await searchCaregivers({ p_teryt: "1465011", p_limit: 50 });
+      const single = await getPublicCaregiver(deletableCaregiverId);
+      const ok =
+        listed.status === 200 &&
+        Array.isArray(listed.json) &&
+        !listed.json.some((row) => row.user_id === deletableCaregiverId) &&
+        single.status === 200 &&
+        isEmptyArray(single.json);
+      return { ...listed, json: { ok, listed: listed.json, single: single.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
   ],
   // The contact page with a session. The cookie jar holds one session at a time: the coordinator (from "signup sends
   // coordinator home"), then the first caregiver again, then a second, new coordinator.
