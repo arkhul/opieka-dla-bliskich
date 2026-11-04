@@ -437,7 +437,7 @@ Migracja nie zmienia danych: istniejące profile dostają pustą dostępność i
 
 #### Manual
 
-- [x] 4.1 `npx supabase db push` zastosował migrację dostępności na produkcji
-- [x] 4.2 Na produkcji macierz ma 24 wiersze, a anon dostaje `permission denied` przy zapisie do `caregiver_availability`
-- [x] 4.3 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
-- [x] 4.4 Na wdrożonym Workerze filtr i linia dostępności działają, a liczba wyników bez filtrów się nie zmieniła
+- [x] 4.1 `npx supabase db push` zastosował migrację dostępności na produkcji — 0210316
+- [x] 4.2 Na produkcji macierz ma 24 wiersze, a anon dostaje `permission denied` przy zapisie do `caregiver_availability` — 0210316
+- [x] 4.3 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list` — 0210316
+- [x] 4.4 Na wdrożonym Workerze filtr i linia dostępności działają, a liczba wyników bez filtrów się nie zmieniła — 0210316
