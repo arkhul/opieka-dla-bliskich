@@ -271,14 +271,14 @@ Brak zmian danych ani schematu. Rollback: usunięcie `e2e/`, `playwright.config.
 
 #### Automated
 
-- [x] 3.1 Lint i typy przechodzą: `npm run lint` oraz `npx astro check`
-- [x] 3.2 Build przechodzi: `npm run build`
-- [x] 3.3 Lokalnie e2e i smoke zielone: `npm run e2e` oraz `npm run smoke`
-- [x] 3.4 Mutacje (a), (b), (c) dają czerwony `npm run e2e`, a po przywróceniu `git diff --stat src/` jest pusty i e2e zielony
-- [ ] 3.5 Workflow jest poprawny składniowo i zielony przebieg CI po pushu: `gh run watch`
+- [x] 3.1 Lint i typy przechodzą: `npm run lint` oraz `npx astro check` — 122ed3d
+- [x] 3.2 Build przechodzi: `npm run build` — 122ed3d
+- [x] 3.3 Lokalnie e2e i smoke zielone: `npm run e2e` oraz `npm run smoke` — 122ed3d
+- [x] 3.4 Mutacje (a), (b), (c) dają czerwony `npm run e2e`, a po przywróceniu `git diff --stat src/` jest pusty i e2e zielony — 122ed3d
+- [x] 3.5 Workflow jest poprawny składniowo i zielony przebieg CI po pushu: `gh run watch` — 122ed3d
 
 #### Manual
 
-- [ ] 3.6 W przebiegu CI krok e2e jest widoczny jako osobny, wymagany krok i trwa akceptowalnie (zanotuj czas instalacji Chromium i samego testu)
-- [ ] 3.7 Umyślnie zepsuty test w gałęzi roboczej daje czerwony job i artefakt raportu (opcjonalnie, jednorazowo)
-- [ ] 3.8 `test-plan.md` jest spójny: Phase 2 `done`, §5 „required", §6.3 wypełniona
+- [x] 3.6 W przebiegu CI krok e2e jest widoczny jako osobny, wymagany krok i trwa akceptowalnie (zanotuj czas instalacji Chromium i samego testu)
+- [x] 3.7 Umyślnie zepsuty test w gałęzi roboczej daje czerwony job i artefakt raportu (opcjonalnie, jednorazowo)
+- [x] 3.8 `test-plan.md` jest spójny: Phase 2 `done`, §5 „required", §6.3 wypełniona
