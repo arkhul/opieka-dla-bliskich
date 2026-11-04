@@ -312,7 +312,7 @@ Migracja tylko dodaje politykę i grant, bez zmian danych. Wycofanie: `drop poli
 
 #### Manual
 
-- [x] 3.1 `npx supabase db push` zastosował `20261104160000_caregiver_profile_delete.sql` na produkcji
-- [x] 3.2 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
-- [x] 3.3 Na produkcji tymczasowy profil po usunięciu znika z `/opiekunowie`, a `/opiekunowie/<id>` daje 404
-- [x] 3.4 Konto testowe usunięte z `auth.users`, liczba wyników `/opiekunowie` bez zmian
+- [x] 3.1 `npx supabase db push` zastosował `20261104160000_caregiver_profile_delete.sql` na produkcji — 9459a24
+- [x] 3.2 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list` — 9459a24
+- [x] 3.3 Na produkcji tymczasowy profil po usunięciu znika z `/opiekunowie`, a `/opiekunowie/<id>` daje 404 — 9459a24
+- [x] 3.4 Konto testowe usunięte z `auth.users`, liczba wyników `/opiekunowie` bez zmian — 9459a24
