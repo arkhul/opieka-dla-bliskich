@@ -1,14 +1,17 @@
 // Smoke test: proves the built app, the Cloudflare adapter, the Supabase auth flow, the public dictionaries
 // and the caregiver profile API and pages still work together, that RLS keeps contact data away from anon, from other caregivers
 // and from coordinators unless the profile is complete, and that the public caregiver list (search_caregivers) and the single
-// public profile (get_public_caregiver) hide incomplete profiles, filter hard and expose no contact data.
+// public profile (get_public_caregiver) hide incomplete profiles and expose no contact data.
+// The list filters hard only by gmina: with selected services a profile must offer at least one of them, and the
+// selected services, then the selected slots, set the order (ranking); every row carries what it is missing
+// (missing_services, missing_slots), and the empty-result hint counts come from one RPC (count_caregivers_relaxed).
 // The pages /opiekunowie/<id> (public, no contact in the HTML) and /kontakt/<id> (protected, contact for coordinators only)
 // close the path from the list to a revealed phone number, including a new coordinator signing up with a return address.
 // Table privileges are checked too: anon and authenticated get only the explicit grants, so reads of contacts and roles
 // by anon and writes to the dictionaries fail with "permission denied" before RLS is even consulted.
 // Caregiver availability (caregiver_availability) is public to read, written only by its owner through save_caregiver_profile(),
-// and the search availability filter matches profiles with at least one selected slot. On the pages: the list filter
-// (termin), the availability line on cards, the relax hint and the grid on the public profile page.
+// and never hides a profile from the search. On the pages: the list filter (termin), the availability line on cards,
+// the relax hints and the grid on the public profile page.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -108,10 +111,27 @@ const searchCaregivers = (args) => supabase("/rest/v1/rpc/search_caregivers", { 
 // One public caregiver profile straight from the database, as anon unless a token is given.
 const getPublicCaregiver = (id) =>
   supabase("/rest/v1/rpc/get_public_caregiver", { method: "POST", json: { p_caregiver_id: id } });
+// Empty-result hint counts (without services, without gmina) in one row, as anon.
+const countRelaxed = (args) => supabase("/rest/v1/rpc/count_caregivers_relaxed", { method: "POST", json: args });
 const listsCaregiver = (json) => Array.isArray(json) && json.some((row) => row.user_id === caregiverId);
 const hidesCaregiver = (json) => Array.isArray(json) && !json.some((row) => row.user_id === caregiverId);
+const findFirstCaregiver = (json) =>
+  Array.isArray(json) ? json.find((row) => row.user_id === caregiverId) : undefined;
 const findSecondCaregiver = (json) =>
   Array.isArray(json) ? json.find((row) => row.user_id === secondCaregiverId) : undefined;
+// Ranking order of search_caregivers(): (matched_services, matched_slots) never increases from row to row, and
+// within an equal pair updated_at never increases. Positions of particular profiles are not checked: the local
+// database collects the smoke profiles of every run. updated_at is compared as a date, not as text: PostgREST
+// returns timestamptz with a varying number of fraction digits.
+const rankedInOrder = (json) =>
+  Array.isArray(json) &&
+  json.every((row, index) => {
+    if (index === 0) return true;
+    const previous = json[index - 1];
+    if (previous.matched_services !== row.matched_services) return previous.matched_services > row.matched_services;
+    if (previous.matched_slots !== row.matched_slots) return previous.matched_slots > row.matched_slots;
+    return Date.parse(previous.updated_at) >= Date.parse(row.updated_at);
+  });
 // Same availability slots regardless of order (SQL orders by slot text; the app sets the canonical order).
 const sameSlots = (actual, expected) =>
   Array.isArray(actual) &&
@@ -125,9 +145,6 @@ const hidesListContact = (text) =>
 // The first caregiver's contact as it could appear on its public profile page.
 const hidesProfileContact = (text) =>
   [contactEmail, "+48600100200", "600100200", "600 100 200"].every((secret) => !text.includes(secret));
-
-// The 13 catalogue slugs (also checked by "services dictionary lists 13 services"), filled by that step.
-let allServiceSlugs = [];
 
 const completeProfile = {
   displayName: "Anna Smoke",
@@ -147,18 +164,15 @@ const secondCaregiverProfile = {
   p_phone: "+48600100300",
   p_email: null,
   p_gminas: ["1465011"],
-  p_services: ["towarzystwo"],
+  // One service more than "Anna Smoke" (towarzystwo), so Bartek ranks above her when both are selected.
+  p_services: ["towarzystwo", "zakupy-i-sprawy"],
 };
 
 const steps = [
   // Dictionaries first: they must work for an anonymous user (no session cookie yet).
   [
     "services dictionary lists 13 services",
-    async () => {
-      const result = await request("/api/dictionaries/services");
-      allServiceSlugs = (result.json?.services ?? []).map((service) => service.slug);
-      return result;
-    },
+    () => request("/api/dictionaries/services"),
     { status: 200, body: (json) => json.services?.length === 13 && json.services[0]?.slug === "towarzystwo" },
   ],
   [
@@ -359,9 +373,19 @@ const steps = [
     { status: 200, body: hidesCaregiver },
   ],
   [
-    "search requires all selected services",
+    "search ranks profile missing a selected service",
     () => searchCaregivers({ p_teryt: "1465011", p_services: ["towarzystwo", "demencja"], p_limit: 50 }),
-    { status: 200, body: hidesCaregiver },
+    {
+      status: 200,
+      body: (json) => {
+        const row = findFirstCaregiver(json);
+        return (
+          row?.matched_services === 1 &&
+          Array.isArray(row.missing_services) &&
+          row.missing_services.some((service) => service.slug === "demencja")
+        );
+      },
+    },
   ],
   [
     "search matches selected service",
@@ -403,7 +427,7 @@ const steps = [
     { status: 204 },
   ],
   // Availability straight against Supabase: public to read, written only by its owner, validated by
-  // save_caregiver_profile(), and the search filter is OR (at least one selected slot).
+  // save_caregiver_profile(), and in the search selected slots only set the order (they never hide a profile).
   [
     "anon reads caregiver availability",
     () => supabase(`/rest/v1/caregiver_availability?caregiver_id=eq.${secondCaregiverId}`),
@@ -443,18 +467,84 @@ const steps = [
     { status: 400, body: (json) => String(json?.message).includes("Nieznane terminy dostępności") },
   ],
   [
-    "search matches any selected slot",
+    "search ranks profiles by covered slots",
     () => searchCaregivers({ p_teryt: "1465011", p_availability: ["sr-noc", "czw-noc"], p_limit: 50 }),
     {
       status: 200,
-      body: (json) =>
-        sameSlots(findSecondCaregiver(json)?.availability, ["nd-wieczor", "sr-noc"]) && hidesCaregiver(json),
+      body: (json) => {
+        const second = findSecondCaregiver(json);
+        return (
+          second?.matched_slots === 1 &&
+          sameSlots(second.missing_slots, ["czw-noc"]) &&
+          sameSlots(second.availability, ["nd-wieczor", "sr-noc"]) &&
+          listsCaregiver(json) &&
+          findFirstCaregiver(json)?.matched_slots === 0 &&
+          rankedInOrder(json)
+        );
+      },
     },
   ],
   [
-    "search hides profile without matching slot",
+    "search keeps profile without matching slot",
     () => searchCaregivers({ p_teryt: "1465011", p_availability: ["czw-noc"], p_limit: 50 }),
-    { status: 200, body: (json) => Array.isArray(json) && findSecondCaregiver(json) === undefined },
+    {
+      status: 200,
+      body: (json) => {
+        const second = findSecondCaregiver(json);
+        return second?.matched_slots === 0 && sameSlots(second.missing_slots, ["czw-noc"]);
+      },
+    },
+  ],
+  [
+    "search hides profile without any selected service",
+    // "Anna Smoke" offers only towarzystwo: with services selected, at least one of them must match.
+    () => searchCaregivers({ p_teryt: "1465011", p_services: ["demencja"], p_limit: 50 }),
+    { status: 200, body: hidesCaregiver },
+  ],
+  [
+    "search ranks services above availability",
+    // Bartek covers both services and no slot (2, 0), Anna one service and the slot (1, 1): services win.
+    () =>
+      searchCaregivers({
+        p_teryt: "1465011",
+        p_services: ["towarzystwo", "zakupy-i-sprawy"],
+        p_availability: ["pon-rano"],
+        p_limit: 50,
+      }),
+    {
+      status: 200,
+      body: (json) => {
+        const second = findSecondCaregiver(json);
+        const first = findFirstCaregiver(json);
+        const secondIndex = Array.isArray(json) ? json.indexOf(second) : -1;
+        const firstIndex = Array.isArray(json) ? json.indexOf(first) : -1;
+        return (
+          second?.matched_services === 2 &&
+          second.matched_slots === 0 &&
+          (first === undefined || (first.matched_services === 1 && first.matched_slots === 1)) &&
+          rankedInOrder(json) &&
+          (first === undefined || secondIndex < firstIndex)
+        );
+      },
+    },
+  ],
+  [
+    "relaxed counts come in one row",
+    async () => {
+      const inGmina = await countRelaxed({ p_teryt: "1465011", p_services: ["demencja"] });
+      const anyGmina = await countRelaxed({ p_services: ["demencja"] });
+      const ok =
+        inGmina.status === 200 &&
+        hasOneRow(inGmina.json) &&
+        Number(inGmina.json[0].without_services) >= 2 &&
+        typeof inGmina.json[0].without_gmina === "number" &&
+        anyGmina.status === 200 &&
+        hasOneRow(anyGmina.json) &&
+        typeof anyGmina.json[0].without_services === "number" &&
+        anyGmina.json[0].without_gmina === null;
+      return { ...inGmina, json: { ok, inGmina: inGmina.json, anyGmina: anyGmina.json } };
+    },
+    { status: 200, body: (json) => json.ok === true },
   ],
   [
     "public caregiver returns availability",
@@ -501,12 +591,14 @@ const steps = [
     async () => {
       const unfiltered = await searchCaregivers({ p_teryt: "1465011", p_limit: 50 });
       const filtered = await searchCaregivers({ p_teryt: "1465011", p_availability: ["sr-noc"], p_limit: 50 });
+      // Slots never hide a profile: with the filter Bartek stays, with nothing covered and the slot missing.
+      const filteredSecond = findSecondCaregiver(filtered.json);
       const ok =
         unfiltered.status === 200 &&
         isEmptyArray(findSecondCaregiver(unfiltered.json)?.availability) &&
         filtered.status === 200 &&
-        Array.isArray(filtered.json) &&
-        findSecondCaregiver(filtered.json) === undefined;
+        filteredSecond?.matched_slots === 0 &&
+        sameSlots(filteredSecond.missing_slots, ["sr-noc"]);
       return { ...unfiltered, json: { ok, unfiltered: unfiltered.json, filtered: filtered.json } };
     },
     { status: 200, body: (json) => json.ok === true },
@@ -586,15 +678,17 @@ const steps = [
     },
   ],
   // Availability on the list, as anonymous user: "Anna Smoke" has Pn–Pt rano + Sb noc, "Bartek Smoke" has none.
+  // A slot nobody has (czw-noc) hides nobody, so there is no empty result and no relax hint.
   [
-    "caregiver list filters by availability",
-    () => request("/opiekunowie?gmina=1465011&termin=pon-rano"),
+    "caregiver list keeps profiles without matching slot",
+    () => request("/opiekunowie?gmina=1465011&termin=czw-noc"),
     {
       status: 200,
       html: (text) =>
         text.includes("Anna Smoke") &&
         text.includes("Pn–Pt: rano · Sb: noc") &&
-        !text.includes("Bartek Smoke") &&
+        text.includes("Bartek Smoke") &&
+        !text.includes("Usuń filtr dostępności") &&
         hidesListContact(text),
     },
   ],
@@ -604,19 +698,18 @@ const steps = [
     { status: 200, html: (text) => text.includes("Bartek Smoke") && text.includes("Dostępność nie podana") },
   ],
   [
-    "caregiver list shows availability relax hint",
-    () => request("/opiekunowie?gmina=1465011&termin=czw-noc"),
-    { status: 200, html: (text) => text.includes("Usuń filtr dostępności (wyniki:") },
-  ],
-  [
     "caregiver list ignores malformed availability",
     () => request("/opiekunowie?gmina=1465011&termin=xyz"),
     { status: 200, html: (text) => text.includes("Anna Smoke") && text.includes("Bartek Smoke") },
   ],
   [
     "caregiver list shows relax hints when nothing matches",
-    () => request(`/opiekunowie?gmina=1465011${allServiceSlugs.map((slug) => `&usluga=${slug}`).join("")}`),
-    { status: 200, html: (text) => text.includes("Usuń filtr usług") },
+    // Nowinka (2001052) has no smoke profiles: only another gmina helps.
+    () => request("/opiekunowie?gmina=2001052&usluga=towarzystwo"),
+    {
+      status: 200,
+      html: (text) => text.includes("Usuń filtr gminy (wyniki:") && text.includes("Spróbuj sąsiedniej gminy"),
+    },
   ],
   [
     "caregiver list ignores malformed filters",
