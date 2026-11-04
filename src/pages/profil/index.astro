@@ -1,5 +1,6 @@
 ---
 import AvailabilityGrid from "@/components/caregiver/AvailabilityGrid.astro";
+import DeleteProfileDialog from "@/components/caregiver/DeleteProfileDialog";
 import Topbar from "@/components/Topbar.astro";
 import Layout from "@/layouts/Layout.astro";
 import { missingItemLabel } from "@/lib/caregiver-profile";
@@ -36,6 +37,8 @@ if (!supabase) {
 }
 
 const missingText = profile?.missing.map(missingItemLabel).join(", ") ?? "";
+// Set by DeleteProfileDialog after a successful delete; ignored once a new profile exists.
+const deleted = Astro.url.searchParams.get("usunieto") === "1";
 ---
 
 <Layout title="Mój profil">
@@ -51,6 +54,11 @@ const missingText = profile?.missing.map(missingItemLabel).join(", ") ?? "";
         <p class="rounded-lg border border-red-500/30 bg-red-900/30 px-3 py-2 text-sm text-red-300">{pageError}</p>
       ) : !profile ? (
         <div class="space-y-4">
+          {deleted && (
+            <p class="rounded-lg border border-emerald-400/30 bg-emerald-900/30 px-3 py-2 text-sm text-emerald-200">
+              Profil został usunięty. Koordynatorzy już go nie widzą.
+            </p>
+          )}
           <p class="text-blue-100/80">Nie masz jeszcze profilu. Uzupełnij go, aby koordynatorzy mogli Cię znaleźć.</p>
           <a
             href="/profil/edycja"
@@ -150,6 +158,14 @@ const missingText = profile?.missing.map(missingItemLabel).join(", ") ?? "";
           >
             Edytuj profil
           </a>
+
+          <section class="border-t border-white/10 pt-6">
+            <h2 class="mb-1 text-sm text-blue-100/60">Usuwanie profilu</h2>
+            <p class="mb-3 text-sm text-blue-100/70">
+              Usunięcie jest trwałe: koordynatorzy przestaną widzieć Twój profil. Konto logowania zostaje.
+            </p>
+            <DeleteProfileDialog client:load />
+          </section>
         </div>
       )}
     </div>

@@ -151,6 +151,18 @@ export async function saveOwnProfile(supabase: SupabaseClient, cmd: SaveCaregive
   }
 }
 
+// Deletes the caller's profile; true when a row was deleted, false when there was no profile. RLS lets an owner delete
+// only their own row, and the foreign key cascade removes the contact, gminas, services and availability with it.
+export async function deleteOwnProfile(supabase: SupabaseClient, userId: string): Promise<boolean> {
+  const { data, error } = await supabase.from("caregiver_profiles").delete().eq("user_id", userId).select("user_id");
+
+  if (error) {
+    throw new Error(`Failed to delete caregiver profile: ${error.message}`);
+  }
+
+  return data.length > 0;
+}
+
 export const CAREGIVER_PAGE_SIZE = 20;
 
 // Row of search_caregivers() and get_public_caregiver(): public columns only. services/gminas are jsonb arrays built in SQL,

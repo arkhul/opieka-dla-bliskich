@@ -15,7 +15,9 @@
 // public profile page.
 // Profile deletion (caregiver_profiles delete policy): only the owner deletes their profile (anon has no privilege,
 // another caregiver and a coordinator delete nothing), the foreign key cascade clears the contact, gminas, services
-// and availability, and the profile is gone from search_caregivers and get_public_caregiver at once.
+// and availability, and the profile is gone from search_caregivers and get_public_caregiver at once. Through the app:
+// DELETE /api/caregiver/profile (401 without a session, 403 for a coordinator, 200 for the owner, 404 the second time),
+// the "Usuń profil" button and the deletion message on /profil, and the deleted profile's 404 page and absence from the list.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -50,6 +52,9 @@ let incompleteCaregiverToken = "";
 // Fourth caregiver: its profile is deleted by its owner.
 let deletableCaregiverId = "";
 let deletableCaregiverToken = "";
+// Fifth caregiver ("Ewa Smoke"): signs up through the app and deletes its profile through the API.
+const appDeletableCaregiverEmail = `smoke-caregiver5-${stamp}@example.com`;
+let appDeletableCaregiverId = "";
 
 function cookieHeader() {
   return [...jar.entries()].map(([k, v]) => `${k}=${v}`).join("; ");
@@ -797,6 +802,7 @@ const steps = [
   ["public profile page 404 for malformed id", () => request("/opiekunowie/nie-uuid"), { status: 404 }],
   ["dashboard redirects after signout", () => request("/dashboard"), { status: 302, location: "/auth/signin" }],
   ["profile API requires a session", () => request("/api/caregiver/profile"), { status: 401 }],
+  ["profile delete requires a session", () => request("/api/caregiver/profile", { method: "DELETE" }), { status: 401 }],
   ["profile page redirects anonymous user", () => request("/profil"), { status: 302, location: "/auth/signin" }],
   [
     "contact page redirects anonymous user",
@@ -820,6 +826,11 @@ const steps = [
   [
     "coordinator cannot save caregiver profile",
     () => request("/api/caregiver/profile", { method: "PUT", json: completeProfile }),
+    { status: 403 },
+  ],
+  [
+    "profile delete requires a caregiver",
+    () => request("/api/caregiver/profile", { method: "DELETE" }),
     { status: 403 },
   ],
   // RLS, straight against Supabase as the signed-in coordinator.
@@ -1026,6 +1037,68 @@ const steps = [
     "new coordinator sees contact after signup",
     () => request(`/kontakt/${caregiverId}`),
     { status: 200, html: (text) => text.includes("tel:+48600100200") },
+  ],
+  // Profile deletion through the app, on a fifth caregiver ("Ewa Smoke") signed up here: the cookie jar now holds its session.
+  [
+    "fifth caregiver signs up",
+    () =>
+      request("/api/auth/signup", {
+        method: "POST",
+        form: { email: appDeletableCaregiverEmail, password, role: "caregiver" },
+      }),
+    { status: 302, location: "/profil/edycja" },
+  ],
+  [
+    "caregiver saves profile to delete",
+    async () => {
+      const result = await request("/api/caregiver/profile", {
+        method: "PUT",
+        json: {
+          ...completeProfile,
+          displayName: "Ewa Smoke",
+          phone: "600 100 500",
+          email: `kontakt5-${stamp}@example.com`,
+          gminas: ["1465011"],
+        },
+      });
+      appDeletableCaregiverId = result.json?.profile?.id ?? "";
+      return result;
+    },
+    {
+      status: 200,
+      body: (json) =>
+        typeof json.profile?.id === "string" &&
+        json.profile.displayName === "Ewa Smoke" &&
+        isEmptyArray(json.profile.missing),
+    },
+  ],
+  [
+    "profile page offers deletion",
+    () => request("/profil"),
+    { status: 200, html: (text) => text.includes("Usuń profil") },
+  ],
+  [
+    "caregiver deletes profile via API",
+    () => request("/api/caregiver/profile", { method: "DELETE" }),
+    { status: 200, body: (json) => json.deleted === true },
+  ],
+  ["second delete finds no profile", () => request("/api/caregiver/profile", { method: "DELETE" }), { status: 404 }],
+  [
+    "profile page confirms deletion",
+    () => request("/profil?usunieto=1"),
+    {
+      status: 200,
+      html: (text) =>
+        text.includes("Profil został usunięty") && text.includes("Utwórz profil") && !text.includes("Usuń profil"),
+    },
+  ],
+  ["deleted profile page is 404", () => request(`/opiekunowie/${appDeletableCaregiverId}`), { status: 404 }],
+  [
+    "deleted profile is not on the list",
+    // By id, not by name: the local database keeps the profiles of every run, so an "Ewa Smoke" left behind by an
+    // interrupted run would break this step until db reset.
+    () => request("/opiekunowie?gmina=1465011"),
+    { status: 200, html: (text) => !text.includes(`/opiekunowie/${appDeletableCaregiverId}`) },
   ],
 ];
 

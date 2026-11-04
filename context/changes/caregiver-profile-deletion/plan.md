@@ -282,31 +282,31 @@ Migracja tylko dodaje politykę i grant, bez zmian danych. Wycofanie: `drop poli
 
 #### Automated
 
-- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset`
-- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error`
-- [x] 1.3 Kontrola grantów przechodzi: `npx supabase db query --local -f scripts/check-table-grants.sql`
-- [x] 1.4 Lint i typy: `npm run lint` i `npx astro check`
-- [x] 1.5 Smoke przechodzi z nowymi krokami bazy: `npm run smoke`
+- [x] 1.1 Wszystkie migracje stosują się od zera: `npx supabase db reset` — 80ed1bf
+- [x] 1.2 Lint bazy bez błędów: `npx supabase db lint --level error` — 80ed1bf
+- [x] 1.3 Kontrola grantów przechodzi: `npx supabase db query --local -f scripts/check-table-grants.sql` — 80ed1bf
+- [x] 1.4 Lint i typy: `npm run lint` i `npx astro check` — 80ed1bf
+- [x] 1.5 Smoke przechodzi z nowymi krokami bazy: `npm run smoke` — 80ed1bf
 
 #### Manual
 
-- [x] 1.6 Granty `caregiver_profiles`: `anon: SELECT`, `authenticated: DELETE, INSERT, SELECT, UPDATE`
-- [x] 1.7 Jedna polityka `DELETE` dla `{authenticated}` na `caregiver_profiles`
+- [x] 1.6 Granty `caregiver_profiles`: `anon: SELECT`, `authenticated: DELETE, INSERT, SELECT, UPDATE` — 80ed1bf
+- [x] 1.7 Jedna polityka `DELETE` dla `{authenticated}` na `caregiver_profiles` — 80ed1bf
 
 ### Phase 2: Przycisk i API
 
 #### Automated
 
-- [ ] 2.1 Lint i typy: `npm run lint` i `npx astro check`
-- [ ] 2.2 Build: `npm run build`
-- [ ] 2.3 Smoke przechodzi z krokami API i stron: `npm run smoke`
+- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check`
+- [x] 2.2 Build: `npm run build`
+- [x] 2.3 Smoke przechodzi z krokami API i stron: `npm run smoke`
 
 #### Manual
 
-- [ ] 2.4 Okno dialogowe: „Anuluj” bez zmian, „Usuń na zawsze” → `/profil?usunieto=1` z komunikatem i „Utwórz profil”
-- [ ] 2.5 Usunięty profil: brak na `/opiekunowie`, 404 na `/opiekunowie/<id>` i `/kontakt/<id>` dla koordynatora
-- [ ] 2.6 psql: brak wierszy w pięciu tabelach profilu, `accounts` i `auth.users` zostają
-- [ ] 2.7 375 px: okno mieści się na ekranie, fokus i Esc działają
+- [x] 2.4 Okno dialogowe: „Anuluj” bez zmian, „Usuń na zawsze” → `/profil?usunieto=1` z komunikatem i „Utwórz profil”
+- [x] 2.5 Usunięty profil: brak na `/opiekunowie`, 404 na `/opiekunowie/<id>` i `/kontakt/<id>` dla koordynatora
+- [x] 2.6 psql: brak wierszy w pięciu tabelach profilu, `accounts` i `auth.users` zostają
+- [x] 2.7 375 px: okno mieści się na ekranie, fokus i Esc działają
 
 ### Phase 3: Wdrożenie produkcyjne
 

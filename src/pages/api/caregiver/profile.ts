@@ -3,7 +3,12 @@ import { z } from "zod";
 import { AVAILABILITY_SLOTS, sortAvailability } from "@/lib/availability";
 import { normalizePlPhone } from "@/lib/phone";
 import { getAccountRole } from "@/lib/services/account.service";
-import { CaregiverProfileValidationError, getOwnProfile, saveOwnProfile } from "@/lib/services/caregiver.service";
+import {
+  CaregiverProfileValidationError,
+  deleteOwnProfile,
+  getOwnProfile,
+  saveOwnProfile,
+} from "@/lib/services/caregiver.service";
 import { createClient } from "@/lib/supabase";
 import type { SaveCaregiverProfileCommand } from "@/types";
 
@@ -171,5 +176,23 @@ export const PUT: APIRoute = async (context) => {
     return json({ profile });
   } catch {
     return json({ error: "Nie udało się zapisać profilu." }, 500);
+  }
+};
+
+// No request body: the profile to delete is always the caller's own.
+export const DELETE: APIRoute = async (context) => {
+  try {
+    const access = await guard(context);
+    if (!access.ok) {
+      return access.response;
+    }
+
+    const deleted = await deleteOwnProfile(access.supabase, access.userId);
+    if (!deleted) {
+      return json({ error: "Nie masz profilu do usunięcia." }, 404);
+    }
+    return json({ deleted: true });
+  } catch {
+    return json({ error: "Nie udało się usunąć profilu." }, 500);
   }
 };
