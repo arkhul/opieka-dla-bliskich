@@ -350,24 +350,24 @@ Migracja zmienia wyłącznie uprawnienia, bez danych i bez przestojów. Wycofani
 
 #### Automated
 
-- [x] 2.1 `npm run lint`, `npx astro check` i `npm run build` przechodzą
-- [x] 2.2 `npm run smoke` na świeżym buildzie przechodzi w całości
-- [x] 2.3 Smoke przy zatrzymanym serwerze wypisuje linie FAIL i podsumowanie z kodem wyjścia 1, bez nieobsłużonego wyjątku
+- [x] 2.1 `npm run lint`, `npx astro check` i `npm run build` przechodzą — f8933a0
+- [x] 2.2 `npm run smoke` na świeżym buildzie przechodzi w całości — f8933a0
+- [x] 2.3 Smoke przy zatrzymanym serwerze wypisuje linie FAIL i podsumowanie z kodem wyjścia 1, bez nieobsłużonego wyjątku — f8933a0
 
 #### Manual
 
-- [x] 2.4 Przy zatrzymanym lokalnym Supabase `GET /api/dictionaries/services` zwraca 500, a log serwera zawiera wpis `console.error`
-- [x] 2.5 Zalogowany opiekun wyszukuje gminy w autocomplete bez błędów; `/profil` dla anonima przekierowuje na `/auth/signin`
+- [x] 2.4 Przy zatrzymanym lokalnym Supabase `GET /api/dictionaries/services` zwraca 500, a log serwera zawiera wpis `console.error` — f8933a0
+- [x] 2.5 Zalogowany opiekun wyszukuje gminy w autocomplete bez błędów; `/profil` dla anonima przekierowuje na `/auth/signin` — f8933a0
 
 ### Phase 3: Wdrożenie produkcyjne
 
 #### Manual
 
-- [ ] 3.1 `npx supabase db push` zastosował migrację uprawnień na produkcji
-- [ ] 3.2 Kontrola uprawnień na produkcji zwraca te same 20 wierszy co lokalnie
-- [ ] 3.3 Na produkcji `anon` dostaje `permission denied` dla zapisu do `gminas` i odczytu `caregiver_contacts`; nic nie zostaje zapisane
-- [ ] 3.4 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
-- [ ] 3.5 Na wdrożonym Workerze słowniki zwracają dane, a `/opiekunowie` renderuje listę z `X-Robots-Tag: noindex`
+- [x] 3.1 `npx supabase db push` zastosował migrację uprawnień na produkcji
+- [x] 3.2 Kontrola uprawnień na produkcji zwraca te same 20 wierszy co lokalnie
+- [x] 3.3 Na produkcji `anon` dostaje `permission denied` dla zapisu do `gminas` i odczytu `caregiver_contacts`; nic nie zostaje zapisane
+- [x] 3.4 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
+- [x] 3.5 Na wdrożonym Workerze słowniki zwracają dane, a `/opiekunowie` renderuje listę z `X-Robots-Tag: noindex`
 
 ### Phase 4: Dokumenty kontekstu
 
