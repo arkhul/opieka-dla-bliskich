@@ -297,22 +297,22 @@ Migracja tylko dodaje politykę i grant, bez zmian danych. Wycofanie: `drop poli
 
 #### Automated
 
-- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check`
-- [x] 2.2 Build: `npm run build`
-- [x] 2.3 Smoke przechodzi z krokami API i stron: `npm run smoke`
+- [x] 2.1 Lint i typy: `npm run lint` i `npx astro check` — 411322b
+- [x] 2.2 Build: `npm run build` — 411322b
+- [x] 2.3 Smoke przechodzi z krokami API i stron: `npm run smoke` — 411322b
 
 #### Manual
 
-- [x] 2.4 Okno dialogowe: „Anuluj” bez zmian, „Usuń na zawsze” → `/profil?usunieto=1` z komunikatem i „Utwórz profil”
-- [x] 2.5 Usunięty profil: brak na `/opiekunowie`, 404 na `/opiekunowie/<id>` i `/kontakt/<id>` dla koordynatora
-- [x] 2.6 psql: brak wierszy w pięciu tabelach profilu, `accounts` i `auth.users` zostają
-- [x] 2.7 375 px: okno mieści się na ekranie, fokus i Esc działają
+- [x] 2.4 Okno dialogowe: „Anuluj” bez zmian, „Usuń na zawsze” → `/profil?usunieto=1` z komunikatem i „Utwórz profil” — 411322b
+- [x] 2.5 Usunięty profil: brak na `/opiekunowie`, 404 na `/opiekunowie/<id>` i `/kontakt/<id>` dla koordynatora — 411322b
+- [x] 2.6 psql: brak wierszy w pięciu tabelach profilu, `accounts` i `auth.users` zostają — 411322b
+- [x] 2.7 375 px: okno mieści się na ekranie, fokus i Esc działają — 411322b
 
 ### Phase 3: Wdrożenie produkcyjne
 
 #### Manual
 
-- [ ] 3.1 `npx supabase db push` zastosował `20261104160000_caregiver_profile_delete.sql` na produkcji
-- [ ] 3.2 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
-- [ ] 3.3 Na produkcji tymczasowy profil po usunięciu znika z `/opiekunowie`, a `/opiekunowie/<id>` daje 404
-- [ ] 3.4 Konto testowe usunięte z `auth.users`, liczba wyników `/opiekunowie` bez zmian
+- [x] 3.1 `npx supabase db push` zastosował `20261104160000_caregiver_profile_delete.sql` na produkcji
+- [x] 3.2 `npx wrangler deploy` zakończony, nowe wdrożenie widoczne w `npx wrangler deployments list`
+- [x] 3.3 Na produkcji tymczasowy profil po usunięciu znika z `/opiekunowie`, a `/opiekunowie/<id>` daje 404
+- [x] 3.4 Konto testowe usunięte z `auth.users`, liczba wyników `/opiekunowie` bez zmian
