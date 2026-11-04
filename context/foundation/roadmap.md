@@ -9,7 +9,7 @@ main_goal: speed
 top_blocker: time
 milestone_id: first-matched-contact
 milestone_seq: 1
-milestone_status: open
+milestone_status: done
 ---
 
 # Roadmap: Opieka dla bliskich
@@ -20,12 +20,13 @@ milestone_status: open
 
 ## Milestone
 
-**M-1: Koordynator znajduje dopasowanego opiekuna i jego kontakt** — Status: open
+**M-1: Koordynator znajduje dopasowanego opiekuna i jego kontakt** — Status: done
 
 - **Intent:** Na wdrożonej wersji działa pełny przepływ z głównego kryterium sukcesu PRD: opiekun publikuje profil, koordynator bez logowania filtruje i przegląda uszeregowane wyniki, a po założeniu konta widzi dane kontaktowe dopasowanej osoby.
 - **Source materials:** `context/foundation/prd.md` (v1)
 - **Done when:** every F-NN and S-NN below is `done`, a przepływ z PRD §Success Criteria → Primary (kroki 1–4) przechodzi na wdrożonym Workerze.
   - 2026-11-03: przepływ PRD §Success Criteria → Primary (kroki 1–4) przeszedł na wdrożonym Workerze. M-1 pozostaje `open` do zakończenia S-04…S-06.
+  - 2026-11-04: po zakończeniu S-04…S-06 przepływ PRD §Success Criteria → Primary (kroki 1–4) przeszedł ponownie na wdrożonym Workerze (wersja `8be88f04-d04f-4145-806e-e0f824f15f41`), razem z filtrem dostępności, rankingiem i oznaczeniem braków; profil testowy usunięty przyciskiem z S-06 (404 na `/opiekunowie/<id>`, „Wyniki: 0”, 0 profili w bazie).
 - **Scope anchors:** wszystkie konieczne wymagania PRD — FR-001…FR-012, FR-016 — oraz US-01. Wymagania nice-to-have (FR-013, FR-014, FR-015) są poza tym kamieniem milowym (zob. `## Parked`).
 
 ## Vision recap
@@ -178,9 +179,9 @@ Foundations below assume these are present and do NOT re-scaffold them.
 | S-01       | caregiver-profile-setup        | Opiekun zakłada konto i publikuje profil                     | done                  | Zarchiwizowane 2026-11-03                       |
 | S-02       | public-caregiver-search        | Publiczna lista opiekunów z filtrami gminy i usługi          | done                  | Zarchiwizowane 2026-11-03                       |
 | S-03       | contact-reveal-after-signin    | Koordynator widzi kontakt opiekuna po zalogowaniu            | done                  | Zarchiwizowane 2026-11-03                       |
-| S-04       | caregiver-availability-filter  | Dostępność opiekuna i filtr po dostępności                   | yes                   | Run `/10x-plan caregiver-availability-filter`   |
-| S-05       | ranked-match-results           | Ranking wyników według dopasowania z oznaczeniem braków      | no                    | Czeka na S-04                                   |
-| S-06       | caregiver-profile-deletion     | Opiekun trwale usuwa swój profil                             | yes                   | Run `/10x-plan caregiver-profile-deletion`      |
+| S-04       | caregiver-availability-filter  | Dostępność opiekuna i filtr po dostępności                   | done                  | Zarchiwizowane 2026-11-04                       |
+| S-05       | ranked-match-results           | Ranking wyników według dopasowania z oznaczeniem braków      | done                  | Zarchiwizowane 2026-11-04                       |
+| S-06       | caregiver-profile-deletion     | Opiekun trwale usuwa swój profil                             | done                  | Zarchiwizowane 2026-11-04                       |
 
 This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Include one row for every `F-NN` and `S-NN`. It should be compact enough to copy into issues, but it must not duplicate the detailed roadmap body.
 
@@ -205,6 +206,8 @@ This table is the clean handoff to Jira/Linear or any MCP-backed backlog. Includ
 ## Milestone History
 
 (Append-only. Carried forward verbatim into each successor milestone's roadmap; empty on the very first milestone.)
+
+- **M-1: Koordynator znajduje dopasowanego opiekuna i jego kontakt** (`first-matched-contact`) — closed 2026-11-04. Na wdrożonym Workerze działa pełny przepływ z PRD: opiekun publikuje profil z dostępnością, koordynator bez logowania filtruje uszeregowane wyniki z oznaczeniem braków, po założeniu konta widzi kontakt, a opiekun może trwale usunąć profil (F-01, S-01…S-06).
 
 ## Done
 
