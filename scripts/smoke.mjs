@@ -4,6 +4,8 @@
 // public profile (get_public_caregiver) hide incomplete profiles, filter hard and expose no contact data.
 // The pages /opiekunowie/<id> (public, no contact in the HTML) and /kontakt/<id> (protected, contact for coordinators only)
 // close the path from the list to a revealed phone number, including a new coordinator signing up with a return address.
+// Table privileges are checked too: anon and authenticated get only the explicit grants, so reads of contacts and roles
+// by anon and writes to the dictionaries fail with "permission denied" before RLS is even consulted.
 // Zero dependencies on purpose. Run against a live server: BASE_URL=http://localhost:4321 npm run smoke
 // npm run smoke loads SUPABASE_URL/SUPABASE_KEY (anon key) from .env; the RLS steps call Supabase directly with them.
 
@@ -92,6 +94,11 @@ async function supabase(path, { method = "GET", token, json } = {}) {
 
 const isEmptyArray = (json) => Array.isArray(json) && json.length === 0;
 const hasOneRow = (json) => Array.isArray(json) && json.length === 1;
+// Missing table privilege, not an RLS denial: both use code 42501, only the message tells them apart.
+const deniesTable = (table) => (json) =>
+  json?.code === "42501" &&
+  typeof json.message === "string" &&
+  json.message.includes(`permission denied for table ${table}`);
 
 // Public caregiver list straight from the database, as anon (no token) unless one is given.
 const searchCaregivers = (args) => supabase("/rest/v1/rpc/search_caregivers", { method: "POST", json: args });
@@ -257,7 +264,8 @@ const steps = [
     },
   ],
   ["profile page renders for caregiver", () => request("/profil"), { status: 200 }],
-  // RLS, straight against Supabase as anon: the public part is readable, contact data and roles are not.
+  // RLS and table privileges, straight against Supabase as anon: the public part is readable, contact data and roles
+  // are not even granted (PostgREST answers 401 for anon), and the dictionaries cannot be written.
   [
     "anon reads public caregiver profile",
     () => supabase(`/rest/v1/caregiver_profiles?user_id=eq.${caregiverId}`),
@@ -271,9 +279,23 @@ const steps = [
   [
     "anon cannot read caregiver contact",
     () => supabase(`/rest/v1/caregiver_contacts?caregiver_id=eq.${caregiverId}`),
-    { status: 200, body: isEmptyArray },
+    { status: 401, body: deniesTable("caregiver_contacts") },
   ],
-  ["anon cannot read account roles", () => supabase("/rest/v1/accounts"), { status: 200, body: isEmptyArray }],
+  [
+    "anon cannot read account roles",
+    () => supabase("/rest/v1/accounts"),
+    { status: 401, body: deniesTable("accounts") },
+  ],
+  [
+    "anon cannot write gminas dictionary",
+    () =>
+      supabase("/rest/v1/gminas", {
+        method: "POST",
+        // Existing columns only (an unknown one is a 400 PGRST204); the privilege check comes before any constraint.
+        json: { teryt: "9999991", name: "Smoke", kind: "wiejska", powiat: "smoke", wojewodztwo: "smoke" },
+      }),
+    { status: 401, body: deniesTable("gminas") },
+  ],
   [
     "anon sees the profile as complete",
     () => supabase("/rest/v1/rpc/caregiver_profile_missing", { method: "POST", json: { p_caregiver_id: caregiverId } }),
@@ -322,6 +344,17 @@ const steps = [
       return result;
     },
     { status: 200, body: (json) => typeof json.access_token === "string" && typeof json.user?.id === "string" },
+  ],
+  [
+    "signed-in user cannot write services dictionary",
+    () =>
+      supabase("/rest/v1/services", {
+        method: "POST",
+        token: secondCaregiverToken,
+        json: { slug: "smoke", label: "Smoke", sort_order: 999 },
+      }),
+    // PostgREST answers 403 for authenticated; the message proves it is the missing grant, not RLS.
+    { status: 403, body: deniesTable("services") },
   ],
   [
     "second caregiver saves complete profile",

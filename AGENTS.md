@@ -7,7 +7,7 @@
 - `createClient()` in `src/lib/supabase.ts` returns `null` when Supabase env vars are missing. Every caller must handle `null` (pattern: `src/pages/api/auth/signin.ts`).
 - Contact data of both caregivers and coordinators (phone, email, address) must render only on protected routes, never on public pages, in public API responses or in anything search engines can index (@context/foundation/prd.md: Guardrails, Non-Functional Requirements, Access Control).
 - Add every page that requires login to `PROTECTED_ROUTES` in `src/middleware.ts`. Matching uses `startsWith`, so `/dashboard` also protects `/dashboard-anything`.
-- New tables go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql` with RLS enabled and one policy per operation and role.
+- New tables go in `supabase/migrations/YYYYMMDDHHmmss_short_description.sql` with RLS enabled, `revoke all on public.<t> from anon, authenticated` followed by explicit grants (Supabase defaults grant ALL, including TRUNCATE), and one policy per operation and role. Pattern: `supabase/migrations/20261103230000_table_grants_mirror_policies.sql`.
 - Secrets live in three places: `.env` (Node), `.dev.vars` (local workerd), and `npx wrangler secret put` (production). A new secret must be added to all three and declared in `env.schema` in @astro.config.mjs.
 
 ## Commands
